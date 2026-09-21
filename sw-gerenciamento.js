@@ -1,11 +1,11 @@
 // sw-gerenciamento.js
-// Service Worker do app "Padrão Elétrica – Gerenciamento de Serviços"
+// Service Worker do app "PRO Service – Gerenciamento de Serviços"
 // Faz cache do "app shell" (HTML, manifest, ícones) para permitir abrir o app
 // mesmo sem internet. Dados (Supabase) sempre precisam de rede — isso aqui
 // só evita a tela branca quando o dispositivo está offline.
-const CACHE_NAME = 'pe-gerenciamento-v3';
+const CACHE_NAME = 'proservice-gerenciamento-v4';
 const APP_SHELL = [
-  './GERENCIAMENTO-PADRAOELETRICA_APP.html',
+  './DASHIBOARD-PROSERVICE_APP.html',
   './manifest-gerenciamento.json',
   './icon-192.png',
   './icon-512.png',
