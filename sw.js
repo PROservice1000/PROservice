@@ -1,19 +1,22 @@
 // ============================================================
-// SERVICE WORKER – Padrão Elétrica
+// SERVICE WORKER – PRO Service
 // Versão: mude este número toda vez que subir arquivos novos!
 // ============================================================
-const CACHE_VERSION = 'padrao-eletrica-v3';
+const CACHE_VERSION = 'proservice-v4';
 
 const ARQUIVOS_CACHE = [
   './',
   './app-cliente.html',
-  './GERENCIAMENTO-PADRAOELETRICA_APP.html',
+  './DASHIBOARD-PROSERVICE_APP.html',
   './manifest-cliente.json',
   './manifest-admin.json',
   './icon-192.png',
   './icon-512.png',
   './icon-32.png',
-  './icon-maskable-512.png'
+  './icon-maskable-512.png',
+  './icon-cliente-192.png',
+  './icon-cliente-512.png',
+  './icon-cliente-maskable-512.png'
 ];
 
 // ── INSTALL: baixa todos os arquivos e salva no cache novo ──
@@ -95,7 +98,7 @@ self.addEventListener('fetch', event => {
           <title>Sem conexão</title>
           <style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#0f0c29;color:#fff;flex-direction:column;gap:16px;}
           h2{color:#f0c040;}p{color:rgba(255,255,255,0.6);text-align:center;}</style></head>
-          <body><h2>⚡ Padrão Elétrica</h2><p>Você está offline.<br>Verifique sua conexão e tente novamente.</p></body></html>`,
+          <body><h2>PRO Service</h2><p>Você está offline.<br>Verifique sua conexão e tente novamente.</p></body></html>`,
           { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
         );
       });
