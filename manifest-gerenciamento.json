@@ -1,14 +1,14 @@
 {
-  "name": "Padrão Elétrica – Gerenciamento de Serviços",
-  "short_name": "PE Gerenciamento",
+  "name": "PRO Service – Gerenciamento de Serviços",
+  "short_name": "PRO Service",
   "description": "Instalações e manutenções elétricas profissionais – painel de gerenciamento de serviços, agenda, clientes e financeiro.",
-  "start_url": "./GERENCIAMENTO-PADROELETRICA_APP.html",
-  "scope": "./GERENCIAMENTO-PADROELETRICA_APP.html",
-  "id": "./GERENCIAMENTO-PADROELETRICA_APP.html",
+  "start_url": "./DASHIBOARD-PROSERVICE_APP.html",
+  "scope": "./DASHIBOARD-PROSERVICE_APP.html",
+  "id": "./DASHIBOARD-PROSERVICE_APP.html",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#1565C0",
+  "theme_color": "#023072",
   "lang": "pt-BR",
   "icons": [
     {
