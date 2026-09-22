@@ -1,10 +1,10 @@
 {
-  "name": "PRO Service – Gerenciamento de Serviços",
+  "name": "PRO Service – Agendamento",
   "short_name": "PRO Service",
-  "description": "Instalações e manutenções elétricas profissionais – painel de gerenciamento de serviços, agenda, clientes e financeiro.",
-  "start_url": "./DASHIBOARD-PROSERVICE_APP.html",
-  "scope": "./DASHIBOARD-PROSERVICE_APP.html",
-  "id": "./DASHIBOARD-PROSERVICE_APP.html",
+  "description": "Agende seus serviços com a PRO Service: elétrica, hidráulica, CFTV, construção civil e muito mais, direto pelo celular.",
+  "start_url": "./app-cliente.html",
+  "scope": "./app-cliente.html",
+  "id": "./app-cliente.html",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
@@ -12,19 +12,19 @@
   "lang": "pt-BR",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icon-cliente-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon-cliente-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-maskable-512.png",
+      "src": "icon-cliente-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
