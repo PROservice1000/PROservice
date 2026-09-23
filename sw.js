@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'proservice-v5'; // subi a versão pra forçar a reinstalação em quem já tem o app aberto
+const CACHE_VERSION = 'proservice-v6'; // subi a versão pra forçar a reinstalação em quem já tem o app aberto
 
 const ARQUIVOS_CACHE = [
   './',
