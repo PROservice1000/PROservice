@@ -1,9 +1,9 @@
-const CACHE_VERSION = 'proservice-v6'; // subi a versão pra forçar a reinstalação em quem já tem o app aberto
+const CACHE_VERSION = 'proservice-v7'; // subi a versão pra forçar a reinstalação em quem já tem o app aberto
 
 const ARQUIVOS_CACHE = [
   './',
   './app-cliente.html',
-  './DASHIBOARD-PROSERVICE_APP.html',
+  './DASHBOARD-PROSERVICE_APP.html',
   './manifest-cliente.json',
   './manifest-gerenciamento.json',
   './icon-192.png',
