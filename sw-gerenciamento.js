@@ -3,9 +3,9 @@
 // Faz cache do "app shell" (HTML, manifest, ícones) para permitir abrir o app
 // mesmo sem internet. Dados (Supabase) sempre precisam de rede — isso aqui
 // só evita a tela branca quando o dispositivo está offline.
-const CACHE_NAME = 'proservice-gerenciamento-v5';
+const CACHE_NAME = 'proservice-gerenciamento-v6';
 const APP_SHELL = [
-  './DASHIBOARD-PROSERVICE_APP.html',
+  './DASHBOARD-PROSERVICE_APP.html',
   './manifest-gerenciamento.json',
   './icon-192.png',
   './icon-512.png',
