@@ -14,7 +14,7 @@
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw-gerenciamento.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
 </script>
@@ -4039,5 +4039,37 @@ function epBaixarHTML() {
 }
 </script>
 
+<script>
+/* PRO Service — aviso de conexão (modo offline).
+   O app abre sem internet, mas os dados (Supabase) só carregam e salvam quando a conexão volta.
+   Se o app foi aberto sem internet, ele recarrega sozinho quando a conexão voltar. */
+(function () {
+  var abriuOffline = !navigator.onLine;
+  var barra = document.createElement('div');
+  barra.id = 'pro-offline-bar';
+  barra.setAttribute('role', 'status');
+  barra.style.cssText = 'display:none;position:fixed;left:0;right:0;bottom:0;z-index:2147483647;pointer-events:none;'
+    + 'background:#FD6106;color:#fff;font:600 13px/1.4 "Segoe UI",system-ui,sans-serif;padding:9px 14px;'
+    + 'text-align:center;box-shadow:0 -2px 8px rgba(0,0,0,.25)';
+  function atualizar() {
+    if (navigator.onLine) {
+      if (abriuOffline) {
+        barra.textContent = 'Conexão restabelecida — atualizando os dados…';
+        barra.style.display = 'block';
+        setTimeout(function () { location.reload(); }, 800);
+      } else {
+        barra.style.display = 'none';
+      }
+    } else {
+      barra.textContent = 'Sem internet — o app está aberto, mas os dados só carregam e sincronizam quando a conexão voltar.';
+      barra.style.display = 'block';
+    }
+  }
+  window.addEventListener('online', atualizar);
+  window.addEventListener('offline', atualizar);
+  document.body.appendChild(barra);
+  atualizar();
+})();
+</script>
 </body>
 </html>
