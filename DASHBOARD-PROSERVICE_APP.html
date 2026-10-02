@@ -126,6 +126,8 @@ nav{flex:1;padding:10px 0;overflow-y:auto}
 .form-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:border .15s}
 .form-input:focus{border-color:var(--primary)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.orc-mat-grid{display:grid;grid-template-columns:minmax(0,1fr) 70px 110px 110px 34px;gap:8px}
+@media(max-width:600px){.orc-mat-head{display:none}.orc-mat-grid{grid-template-columns:1fr 1fr 34px}.orc-mat-grid .orc-mat-nome{grid-column:1/-1}.orc-mat-grid .orc-mat-total{grid-column:2/3}.orc-mat-grid button{grid-column:3/4;grid-row:2}.orc-mat-row{padding-bottom:8px;border-bottom:1px dashed var(--border)}}
 .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 .toggle{position:relative;width:44px;height:24px;cursor:pointer}
 .toggle input{opacity:0;width:0;height:0}
@@ -981,12 +983,30 @@ Acesse o app para confirmar ou cancelar.</textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Valor (R$)</label>
-            <input class="form-input" id="orc-valor" type="number" placeholder="0,00" min="0" step="0.01">
+            <label class="form-label">Valor da Mão de Obra (R$)</label>
+            <input class="form-input" id="orc-mao-obra" type="number" placeholder="0,00" min="0" step="0.01" oninput="calcOrcTotal()">
           </div>
           <div class="form-group">
             <label class="form-label">Validade do Orçamento</label>
             <input class="form-input" id="orc-validade" placeholder="Ex: 15 dias">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Materiais</label>
+          <div class="orc-mat-grid orc-mat-head" style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">
+            <span>Material</span><span>Qtd.</span><span>Valor unit. (R$)</span><span>Total (R$)</span><span></span>
+          </div>
+          <div id="orc-materiais"></div>
+          <button type="button" class="btn btn-outline btn-sm" style="margin-top:4px" onclick="addOrcMaterial()">➕ Adicionar material</button>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Total dos Materiais (R$)</label>
+            <input class="form-input" id="orc-total-mat" readonly placeholder="0,00" style="background:#F5F5F5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Valor Total (R$)</label>
+            <input class="form-input" id="orc-valor" readonly placeholder="0,00" style="background:#F5F5F5;font-weight:700">
           </div>
         </div>
         <div class="form-group">
@@ -1560,7 +1580,7 @@ function openPage(id) {
   if (id === 'profissionais') renderProfissionais();
   if (id === 'financeiro') renderFinanceiro();
   if (id === 'clientes') renderClientes();
-  if (id === 'orcamento') { document.getElementById('orc-data').value = today(); }
+  if (id === 'orcamento') { document.getElementById('orc-data').value = today(); if (!document.querySelector('#orc-materiais .orc-mat-row')) addOrcMaterial(); }
   if (id === 'ordemservico') { document.getElementById('os-data').value = today(); }
   if (id === 'recibo') { if(!document.getElementById('rec-data').value) document.getElementById('rec-data').value = today(); }
   if (id === 'meuapp') renderMeuApp();
@@ -2565,15 +2585,24 @@ function enviarOrcamentoZap() {
   const cliente = document.getElementById('orc-cliente').value.trim() || '—';
   const data = document.getElementById('orc-data').value;
   const desc = document.getElementById('orc-desc').value.trim() || '—';
-  const valor = parseFloat(document.getElementById('orc-valor').value) || 0;
+  const maoObra = parseFloat(document.getElementById('orc-mao-obra').value) || 0;
+  const materiais = getOrcMateriais();
+  const totalMat = materiais.reduce((a, m) => a + m.total, 0);
+  const valor = maoObra + totalMat;
   const validade = document.getElementById('orc-validade').value.trim() || '—';
   const dataFmt = data ? new Date(data + 'T00:00:00').toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
-  const valorFmt = valor.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+  const brl = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+  const valorFmt = brl(valor);
+  const matLinhas = materiais.length
+    ? `*Materiais:*\n` + materiais.map(m => `• ${m.nome || 'Material'} — ${m.qtd} x ${brl(m.unit)} = ${brl(m.total)}`).join('\n') + `\n*Total dos materiais:* ${brl(totalMat)}\n`
+    : '';
 
   const msg = `📋 *Orçamento — ${empresa}*\n\n`
     + `Olá, ${cliente}! Segue o orçamento solicitado:\n\n`
     + `*Serviço:* ${desc}\n`
-    + `*Valor:* ${valorFmt}\n`
+    + `*Mão de obra:* ${brl(maoObra)}\n`
+    + matLinhas
+    + `*Valor total:* ${valorFmt}\n`
     + `*Validade:* ${validade}\n`
     + `*Data:* ${dataFmt}\n\n`
     + `Qualquer dúvida estou à disposição!`;
@@ -2588,7 +2617,13 @@ function imprimirOrcamento() {
   const cliente = document.getElementById('orc-cliente').value.trim() || '—';
   const data = document.getElementById('orc-data').value;
   const desc = document.getElementById('orc-desc').value.trim() || '—';
-  const valor = parseFloat(document.getElementById('orc-valor').value) || 0;
+  const maoObra = parseFloat(document.getElementById('orc-mao-obra').value) || 0;
+  const materiais = getOrcMateriais();
+  const totalMat = materiais.reduce((a, m) => a + m.total, 0);
+  const valor = maoObra + totalMat;
+  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const matRows = materiais.map(m => `<tr><td>${esc(m.nome || 'Material')}</td><td style="text-align:center">${m.qtd}</td><td style="text-align:right">${fmt(m.unit)}</td><td style="text-align:right">${fmt(m.total)}</td></tr>`).join('');
   const validade = document.getElementById('orc-validade').value.trim() || '—';
   const obs = document.getElementById('orc-obs').value.trim();
   const dataFmt = data ? new Date(data + 'T00:00:00').toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
@@ -2607,6 +2642,11 @@ function imprimirOrcamento() {
     .label{font-size:11px;color:#9E9E9E;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
     .value{font-size:15px;font-weight:500}
     .valor{font-size:26px;font-weight:800;color:#023072}
+    table.mat{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+    table.mat th{font-size:11px;color:#9E9E9E;text-transform:uppercase;letter-spacing:.5px;text-align:left;padding:6px 4px;border-bottom:1px solid #E0E0E0}
+    table.mat th:nth-child(2){text-align:center} table.mat th:nth-child(3),table.mat th:nth-child(4){text-align:right}
+    table.mat td{padding:6px 4px;border-bottom:1px solid #F0F0F0}
+    .linha{display:flex;justify-content:space-between;font-size:14px;margin-top:8px}
     .footer{margin-top:30px;padding-top:16px;border-top:1px solid #E0E0E0;font-size:12px;color:#9E9E9E;text-align:center}
     ${WM_CSS}
     @media print{body{margin:0 auto;padding:14mm 0;max-width:178mm}}
@@ -2621,8 +2661,16 @@ function imprimirOrcamento() {
   <div class="box">
     <div class="label">Serviço / Descrição</div><div class="value" style="white-space:pre-line">${desc}</div>
   </div>
+  <div class="box">
+    <div class="label">Mão de Obra</div><div class="value">${fmt(maoObra)}</div>
+  </div>
+  ${materiais.length ? `<div class="box">
+    <div class="label">Materiais</div>
+    <table class="mat"><thead><tr><th>Material</th><th>Qtd.</th><th>Valor unit.</th><th>Total</th></tr></thead><tbody>${matRows}</tbody></table>
+    <div class="linha"><span>Total dos materiais</span><strong>${fmt(totalMat)}</strong></div>
+  </div>` : ''}
   <div class="box" style="display:flex;gap:32px">
-    <div><div class="label">Valor Total</div><div class="valor">R$ ${valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+    <div><div class="label">Valor Total</div><div class="valor">${fmt(valor)}</div></div>
     <div><div class="label">Validade</div><div class="value">${validade}</div></div>
   </div>
   ${obs ? `<div class="box"><div class="label">Observações</div><div class="value" style="white-space:pre-line">${obs}</div></div>` : ''}
@@ -2632,9 +2680,55 @@ function imprimirOrcamento() {
   win.document.close();
 }
 function limparOrcamento() {
-  ['orc-cliente','orc-data','orc-desc','orc-valor','orc-validade','orc-obs','orc-whatsapp'].forEach(id => {
+  ['orc-cliente','orc-data','orc-desc','orc-mao-obra','orc-total-mat','orc-valor','orc-validade','orc-obs','orc-whatsapp'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
+  const box = document.getElementById('orc-materiais');
+  if (box) { box.innerHTML = ''; addOrcMaterial(); }
+  calcOrcTotal();
+}
+// ── Materiais do orçamento (qtd x valor unitário) ──
+function addOrcMaterial() {
+  const box = document.getElementById('orc-materiais');
+  if (!box) return;
+  const row = document.createElement('div');
+  row.className = 'orc-mat-row orc-mat-grid';
+  row.style.marginBottom = '8px';
+  row.innerHTML = `
+    <input class="form-input orc-mat-nome" placeholder="Ex: Cano PVC 25mm">
+    <input class="form-input orc-mat-qtd" type="number" min="0" step="any" value="1" oninput="calcOrcTotal()">
+    <input class="form-input orc-mat-unit" type="number" min="0" step="0.01" placeholder="0,00" oninput="calcOrcTotal()">
+    <input class="form-input orc-mat-total" readonly placeholder="0,00" style="background:#F5F5F5">
+    <button type="button" class="btn btn-outline btn-sm" title="Remover" style="padding:0;justify-content:center" onclick="removeOrcMaterial(this)">🗑️</button>`;
+  box.appendChild(row);
+}
+function removeOrcMaterial(btn) {
+  const box = document.getElementById('orc-materiais');
+  btn.closest('.orc-mat-row').remove();
+  if (!box.querySelector('.orc-mat-row')) addOrcMaterial();
+  calcOrcTotal();
+}
+function getOrcMateriais() {
+  return Array.from(document.querySelectorAll('#orc-materiais .orc-mat-row')).map(r => {
+    const nome = r.querySelector('.orc-mat-nome').value.trim();
+    const qtd = parseFloat(r.querySelector('.orc-mat-qtd').value) || 0;
+    const unit = parseFloat(r.querySelector('.orc-mat-unit').value) || 0;
+    return { nome, qtd, unit, total: qtd * unit };
+  }).filter(m => m.nome || m.unit > 0);
+}
+function calcOrcTotal() {
+  let totalMat = 0;
+  document.querySelectorAll('#orc-materiais .orc-mat-row').forEach(r => {
+    const qtd = parseFloat(r.querySelector('.orc-mat-qtd').value) || 0;
+    const unit = parseFloat(r.querySelector('.orc-mat-unit').value) || 0;
+    const t = qtd * unit;
+    r.querySelector('.orc-mat-total').value = t ? t.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+    totalMat += t;
+  });
+  const maoObra = parseFloat(document.getElementById('orc-mao-obra').value) || 0;
+  const fmt = v => v ? v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+  document.getElementById('orc-total-mat').value = fmt(totalMat);
+  document.getElementById('orc-valor').value = fmt(maoObra + totalMat);
 }
 
 // ─── RECIBO ──────────────────────────────────────────────────────
