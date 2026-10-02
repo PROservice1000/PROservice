@@ -329,20 +329,19 @@ function agendamentoDoBanco(row) {
 
 async function carregar() {
   try {
-    const [cfg, srv, ags, sols, profs, cls] = await Promise.all([
+    // Visitante só lê o necessário. 'agenda_publica' = horários já ocupados
+    // (agendamentos + solicitações não canceladas), sem nome nem telefone.
+    const [cfg, srv, ags, profs] = await Promise.all([
       sb.from('config').select('*').eq('id', 1).maybeSingle(),
       sb.from('servicos').select('*'),
-      sb.from('agendamentos').select('*'),
-      sb.from('solicitacoes').select('*'),
+      sb.from('agenda_publica').select('*'),
       sb.from('profissionais').select('*'),
-      sb.from('clientes').select('*'),
     ]);
     if (cfg.data) state.config = configDoBanco(cfg.data);
     if (srv.data) state.servicos = srv.data;
-    if (ags.data) state.agendamentos = ags.data.map(agendamentoDoBanco);
-    if (sols.data) state.solicitacoes = sols.data.map(solicitacaoDoBanco);
+    if (ags.data) state.agendamentos = ags.data;
+    state.solicitacoes = [];
     if (profs.data) state.profissionais = profs.data;
-    if (cls.data) state.clientes = cls.data;
   } catch(e) { console.error('Erro ao carregar do Supabase:', e); }
   await carregarFotos();
 }
@@ -351,8 +350,7 @@ async function carregar() {
 async function carregarFotos() {
   if (!session.zap) { state.fotos = []; return; }
   try {
-    const { data } = await sb.from('fotos_clientes')
-      .select('*').eq('zap', numZap(session.zap)).order('ts', { ascending: false });
+    const { data } = await sb.rpc('minhas_fotos', { p_zap: numZap(session.zap) });
     if (data) state.fotos = data.map(fotoDoBanco);
   } catch(e) { console.error('Erro ao carregar fotos:', e); }
 }
@@ -383,11 +381,8 @@ async function gravarFoto(foto) {
 }
 // Garante que o cliente existe na tabela clientes (upsert simples)
 async function gravarClienteSeNovo(cliente) {
-  const existe = state.clientes.find(c => c.zap === cliente.zap);
-  if (existe) return;
-  await sb.from('clientes').insert({
-    id: cliente.id, nome: cliente.nome, zap: cliente.zap,
-    end_: cliente.end || '', pedidos: cliente.pedidos || 0, gasto: cliente.gasto || 0,
+  await sb.rpc('registrar_cliente', {
+    p_id: cliente.id, p_nome: cliente.nome, p_zap: cliente.zap, p_end: cliente.end || '',
   });
 }
 
@@ -994,7 +989,7 @@ async function excluirFotoCliente(id) {
       await sb.storage.from('fotos-clientes').remove([caminho]);
     }
     // Remove o registro da tabela
-    await sb.from('fotos_clientes').delete().eq('id', id);
+    await sb.rpc('excluir_foto', { p_id: String(id), p_zap: numZap(session.zap) });
   } catch(e) {
     console.error('Erro ao excluir foto:', e);
     toast('Não foi possível excluir a foto.');
