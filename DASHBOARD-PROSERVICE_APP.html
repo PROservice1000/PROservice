@@ -440,6 +440,10 @@ const PRO_LOGOS = {
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 3.5L18 2l-1.5 1.5L15 2l-1.5 1.5L12 2l-1.5 1.5L9 2 7.5 3.5 6 2v14H3v3c0 1.66 1.34 3 3 3h12c1.66 0 3-1.34 3-3V2l-1.5 1.5zM19 19c0 .55-.45 1-1 1s-1-.45-1-1v-3H8V5h11v14z"/><path d="M14 14H10v-2h4v2zm2-4H10V8h6v2z"/></svg>
       Emitir Recibo
     </div>
+    <div class="nav-item" data-page="arquivo" onclick="openPage('arquivo')">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+      Arquivo de Documentos
+    </div>
     <div class="nav-item" data-page="financeiro" onclick="openPage('financeiro')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
       Financeiro
@@ -456,6 +460,9 @@ const PRO_LOGOS = {
   <div style="padding:12px 16px;border-top:1px solid var(--border)">
     <button class="btn btn-green" style="width:100%;justify-content:center;font-size:13px" onclick="abrirAppCliente()">
       🔗 Abrir App do Cliente
+    </button>
+    <button class="btn" style="width:100%;justify-content:center;font-size:13px;margin-top:8px" onclick="loginSair()">
+      🚪 Sair
     </button>
   </div>
 </aside>
@@ -901,9 +908,11 @@ Acesse o app para confirmar ou cancelar.</textarea>
           <label class="form-label">Número do Recibo</label>
           <input class="form-input" id="rec-numero" placeholder="Ex: 001/2026">
         </div>
-        <div style="display:flex;gap:10px;margin-top:8px">
+        <div id="banner-recibo" style="display:none;background:var(--primary-light);border-left:4px solid var(--primary);padding:10px 14px;border-radius:6px;font-size:13px;margin-top:8px"></div>
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="imprimirRecibo()">🖨️ Imprimir / Salvar PDF</button>
           <button class="btn btn-outline" style="color:#25D366;border-color:#25D366" onclick="enviarReciboZap()">📲 Enviar via WhatsApp</button>
+          <button class="btn btn-outline" id="btn-salvar-recibo" style="color:var(--primary);border-color:var(--primary)" onclick="salvarDocumento('recibo')">💾 Salvar</button>
           <button class="btn btn-outline" onclick="limparRecibo()">🗑️ Limpar</button>
         </div>
       </div>
@@ -1013,9 +1022,11 @@ Acesse o app para confirmar ou cancelar.</textarea>
           <label class="form-label">Observações</label>
           <textarea class="form-input" id="orc-obs" rows="2" placeholder="Condições, materiais inclusos, prazo de execução..." style="resize:vertical"></textarea>
         </div>
-        <div style="display:flex;gap:10px;margin-top:8px">
+        <div id="banner-orcamento" style="display:none;background:var(--primary-light);border-left:4px solid var(--primary);padding:10px 14px;border-radius:6px;font-size:13px;margin-top:8px"></div>
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="imprimirOrcamento()">🖨️ Imprimir / Salvar PDF</button>
           <button class="btn btn-outline" style="color:#25D366;border-color:#25D366" onclick="enviarOrcamentoZap()">📲 Enviar via WhatsApp</button>
+          <button class="btn btn-outline" id="btn-salvar-orcamento" style="color:var(--primary);border-color:var(--primary)" onclick="salvarDocumento('orcamento')">💾 Salvar</button>
           <button class="btn btn-outline" onclick="limparOrcamento()">🗑️ Limpar</button>
         </div>
       </div>
@@ -1087,12 +1098,29 @@ Acesse o app para confirmar ou cancelar.</textarea>
           <label class="form-label">Observações</label>
           <textarea class="form-input" id="os-obs" rows="2" placeholder="Materiais utilizados, condições especiais, garantia..." style="resize:vertical"></textarea>
         </div>
-        <div style="display:flex;gap:10px;margin-top:8px">
+        <div id="banner-ordem_servico" style="display:none;background:var(--primary-light);border-left:4px solid var(--primary);padding:10px 14px;border-radius:6px;font-size:13px;margin-top:8px"></div>
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="imprimirOS()">🖨️ Imprimir / Salvar PDF</button>
           <button class="btn btn-outline" style="color:#25D366;border-color:#25D366" onclick="enviarOSZap()">📲 Enviar via WhatsApp</button>
+          <button class="btn btn-outline" id="btn-salvar-ordem_servico" style="color:var(--primary);border-color:var(--primary)" onclick="salvarDocumento('ordem_servico')">💾 Salvar</button>
           <button class="btn btn-outline" onclick="limparOS()">🗑️ Limpar</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ ARQUIVO DE DOCUMENTOS ══ -->
+  <div class="page" id="page-arquivo">
+    <div class="topbar">
+      <div><div class="topbar-title">Arquivo de Documentos</div><div class="topbar-sub">PDFs de orçamentos, ordens de serviço e recibos guardados</div></div>
+    </div>
+    <div style="padding:24px 28px">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input id="arq-busca" placeholder="Buscar por cliente, número ou descrição..." oninput="filtrarArquivoBusca(this.value)">
+      </div>
+      <div id="arq-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
+      <div class="card" style="padding:0"><div id="arq-lista"></div></div>
     </div>
   </div>
 
@@ -1278,11 +1306,38 @@ Acesse o app para confirmar ou cancelar.</textarea>
   </div>
 </div>
 
+<!-- Login do painel (Supabase Auth) -->
+<style>
+#login-gate{position:fixed;inset:0;z-index:100000;background:linear-gradient(135deg,#023072,#0a4aa8);display:none;align-items:center;justify-content:center;padding:20px}
+#login-gate .lg-box{background:#fff;border-radius:16px;padding:32px 28px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+#login-gate h2{font-size:20px;margin:0 0 4px;color:#023072}
+#login-gate p{font-size:13px;color:#616161;margin:0 0 20px}
+#login-gate label{display:block;font-size:12px;font-weight:600;color:#424242;margin:12px 0 4px}
+#login-gate input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:15px}
+#login-gate button{width:100%;margin-top:20px;padding:12px;border:0;border-radius:8px;background:#023072;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+#login-gate button:disabled{opacity:.6;cursor:wait}
+#login-gate .lg-erro{color:#C62828;font-size:13px;margin-top:12px;min-height:18px}
+</style>
+<div id="login-gate">
+  <div class="lg-box">
+    <h2>🔒 PRO Service</h2>
+    <p>Acesso restrito. Entre com seu e-mail e senha.</p>
+    <label for="lg-email">E-mail</label>
+    <input id="lg-email" type="email" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lg-senha').focus()">
+    <label for="lg-senha">Senha</label>
+    <input id="lg-senha" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginEntrar()">
+    <button id="lg-btn" onclick="loginEntrar()">Entrar</button>
+    <div class="lg-erro" id="lg-erro"></div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 // ─── STATE ───────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://ftnhcbhgfeymwbjywdmp.supabase.co';
@@ -1392,6 +1447,56 @@ async function carregar() {
     if (cls.data) state.clientes = cls.data.map(clienteDoBanco);
     if (tr.data) state.transacoes = tr.data;
   } catch(e) { console.error('Erro ao carregar do Supabase:', e); }
+}
+
+// ─── LOGIN (Supabase Auth) ───────────────────────────────────────
+// O painel exige e-mail/senha. A tela do cliente (?cliente=1) continua
+// aberta, mas só enxerga serviços, profissionais, config e a agenda pública.
+async function exigirLogin() {
+  const { data } = await sb.auth.getSession();
+  if (data && data.session) return;
+  const gate = document.getElementById('login-gate');
+  gate.style.display = 'flex';
+  setTimeout(() => document.getElementById('lg-email').focus(), 50);
+  await new Promise(resolve => { window._loginOk = resolve; });
+  gate.style.display = 'none';
+}
+async function loginEntrar() {
+  const email = document.getElementById('lg-email').value.trim();
+  const senha = document.getElementById('lg-senha').value;
+  const erro = document.getElementById('lg-erro');
+  const btn = document.getElementById('lg-btn');
+  erro.textContent = '';
+  if (!email || !senha) { erro.textContent = 'Preencha e-mail e senha.'; return; }
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+  btn.disabled = false; btn.textContent = 'Entrar';
+  if (error) { erro.textContent = 'E-mail ou senha incorretos.'; return; }
+  document.getElementById('lg-senha').value = '';
+  if (window._loginOk) window._loginOk();
+}
+async function loginSair() {
+  await sb.auth.signOut();
+  location.reload();
+}
+sb.auth.onAuthStateChange((evento) => {
+  if (evento === 'SIGNED_OUT' && !new URLSearchParams(location.search).get('cliente')) location.reload();
+});
+
+// Carga mínima para a tela pública do cliente (sem dados de outros clientes)
+async function carregarPublico() {
+  try {
+    const [cfg, srv, profs, ag] = await Promise.all([
+      sb.from('config').select('*').eq('id', 1).maybeSingle(),
+      sb.from('servicos').select('*'),
+      sb.from('profissionais').select('*'),
+      sb.from('agenda_publica').select('*'),
+    ]);
+    if (cfg.data) state.config = configDoBanco(cfg.data);
+    if (srv.data) state.servicos = srv.data;
+    if (profs.data) state.profissionais = profs.data;
+    if (ag.data) state.agendamentos = ag.data;
+  } catch (e) { console.error('Erro ao carregar dados públicos:', e); }
 }
 
 // salvar() grava TUDO que está em memória de volta no Supabase.
@@ -1580,8 +1685,9 @@ function openPage(id) {
   if (id === 'profissionais') renderProfissionais();
   if (id === 'financeiro') renderFinanceiro();
   if (id === 'clientes') renderClientes();
-  if (id === 'orcamento') { document.getElementById('orc-data').value = today(); if (!document.querySelector('#orc-materiais .orc-mat-row')) addOrcMaterial(); }
-  if (id === 'ordemservico') { document.getElementById('os-data').value = today(); }
+  if (id === 'arquivo') abrirArquivo();
+  if (id === 'orcamento') { if (!document.getElementById('orc-data').value) document.getElementById('orc-data').value = today(); if (!document.querySelector('#orc-materiais .orc-mat-row')) addOrcMaterial(); }
+  if (id === 'ordemservico') { if (!document.getElementById('os-data').value) document.getElementById('os-data').value = today(); }
   if (id === 'recibo') { if(!document.getElementById('rec-data').value) document.getElementById('rec-data').value = today(); }
   if (id === 'meuapp') renderMeuApp();
   if (window.innerWidth <= 768) closeSidebar();
@@ -2680,6 +2786,7 @@ function imprimirOrcamento() {
   win.document.close();
 }
 function limparOrcamento() {
+  docSairEdicao('orcamento');
   ['orc-cliente','orc-data','orc-desc','orc-mao-obra','orc-total-mat','orc-valor','orc-validade','orc-obs','orc-whatsapp'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
@@ -2843,6 +2950,7 @@ function imprimirRecibo() {
 }
 
 function limparRecibo() {
+  docSairEdicao('recibo');
   ['rec-cliente','rec-data','rec-valor','rec-extenso','rec-desc','rec-numero','rec-whatsapp'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
@@ -2939,6 +3047,7 @@ function imprimirOS() {
   win.document.close();
 }
 function limparOS() {
+  docSairEdicao('ordem_servico');
   ['os-numero','os-data','os-cliente','os-profissional','os-endereco','os-desc','os-valor','os-obs','os-whatsapp'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
@@ -2972,6 +3081,349 @@ function enviarOSZap() {
     + `Qualquer dúvida estou à disposição!`;
 
   window.open('https://wa.me/' + numero + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+// ─── ARQUIVO DE DOCUMENTOS (orçamentos, ordens de serviço e recibos) ───────────
+// Tabela única "documentos" no Supabase. Independente do salvar() geral.
+const DOC_TIPOS = {
+  orcamento:     { label: 'Orçamento',        plural: 'Orçamentos',        icone: '📋', pagina: 'orcamento' },
+  ordem_servico: { label: 'Ordem de Serviço', plural: 'Ordens de Serviço', icone: '🔧', pagina: 'ordemservico' },
+  recibo:        { label: 'Recibo',           plural: 'Recibos',           icone: '🧾', pagina: 'recibo' },
+};
+const DOC_SQL = `create table if not exists documentos (
+  id uuid primary key default gen_random_uuid(),
+  tipo text not null check (tipo in ('orcamento','ordem_servico','recibo')),
+  numero text,
+  cliente text,
+  valor_total numeric(12,2),
+  dados jsonb not null,
+  pdf_path text,
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now()
+);
+alter table documentos add column if not exists pdf_path text;
+create index if not exists documentos_tipo_criado_idx on documentos (tipo, criado_em desc);
+create index if not exists documentos_cliente_idx on documentos (cliente);
+alter table documentos enable row level security;
+drop policy if exists "acesso_app" on documentos;
+create policy "acesso_app" on documentos for all to authenticated using (true) with check (true);
+
+insert into storage.buckets (id, name, public) values ('documentos', 'documentos', false) on conflict (id) do nothing;
+drop policy if exists "documentos_acesso_app" on storage.objects;
+create policy "documentos_acesso_app" on storage.objects for all to authenticated using (bucket_id = 'documentos') with check (bucket_id = 'documentos');`;
+
+state.documentos = [];
+let _docFiltro = 'todos', _docBusca = '', _docErro = null, _docCarregando = false;
+const _docEditando = { orcamento: null, ordem_servico: null, recibo: null };
+const _docBase = { orcamento: null, ordem_servico: null, recibo: null }; // foto do form no último salvar/abrir
+
+function _docEsc(t) { return String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _docV(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function _docSet(id, v) { const el = document.getElementById(id); if (el) el.value = (v == null ? '' : v); }
+function _docUuid() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c === 'x' ? r : (r&0x3|0x8)).toString(16); });
+}
+function _docData(d) { return d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') : ''; }
+
+// Lê o formulário atual do tipo indicado
+function coletarDocumento(tipo) {
+  if (tipo === 'orcamento') {
+    const materiais = Array.from(document.querySelectorAll('#orc-materiais .orc-mat-row')).map(r => ({
+      nome: r.querySelector('.orc-mat-nome').value.trim(),
+      qtd: parseFloat(r.querySelector('.orc-mat-qtd').value) || 0,
+      unit: parseFloat(r.querySelector('.orc-mat-unit').value) || 0,
+    })).filter(m => m.nome || m.unit > 0);
+    const maoObra = parseFloat(_docV('orc-mao-obra')) || 0;
+    const total = Math.round((maoObra + materiais.reduce((a, m) => a + m.qtd * m.unit, 0)) * 100) / 100;
+    const cliente = _docV('orc-cliente').trim();
+    return { numero: null, cliente, valor_total: total, dados: {
+      cliente, data: _docV('orc-data'), whatsapp: _docV('orc-whatsapp'), desc: _docV('orc-desc'),
+      maoObra: _docV('orc-mao-obra'), validade: _docV('orc-validade'), obs: _docV('orc-obs'), materiais } };
+  }
+  if (tipo === 'ordem_servico') {
+    const cliente = _docV('os-cliente').trim();
+    return { numero: _docV('os-numero').trim() || null, cliente, valor_total: parseFloat(_docV('os-valor')) || 0, dados: {
+      numero: _docV('os-numero'), data: _docV('os-data'), cliente, profissional: _docV('os-profissional'),
+      whatsapp: _docV('os-whatsapp'), endereco: _docV('os-endereco'), desc: _docV('os-desc'),
+      valor: _docV('os-valor'), status: _docV('os-status'), obs: _docV('os-obs') } };
+  }
+  const cliente = _docV('rec-cliente').trim();
+  return { numero: _docV('rec-numero').trim() || null, cliente, valor_total: parseFloat(_docV('rec-valor')) || 0, dados: {
+    numero: _docV('rec-numero'), data: _docV('rec-data'), cliente, whatsapp: _docV('rec-whatsapp'),
+    valor: _docV('rec-valor'), pagamento: _docV('rec-pagamento'), extenso: _docV('rec-extenso'), desc: _docV('rec-desc') } };
+}
+
+// Preenche o formulário do tipo indicado com os dados salvos
+function preencherForm(tipo, d) {
+  d = d || {};
+  if (tipo === 'orcamento') {
+    _docSet('orc-cliente', d.cliente); _docSet('orc-data', d.data); _docSet('orc-whatsapp', d.whatsapp);
+    _docSet('orc-desc', d.desc); _docSet('orc-mao-obra', d.maoObra); _docSet('orc-validade', d.validade); _docSet('orc-obs', d.obs);
+    const box = document.getElementById('orc-materiais'); box.innerHTML = '';
+    const mats = (d.materiais && d.materiais.length) ? d.materiais : [null];
+    mats.forEach(m => {
+      addOrcMaterial();
+      if (!m) return;
+      const row = box.lastElementChild;
+      row.querySelector('.orc-mat-nome').value = m.nome || '';
+      row.querySelector('.orc-mat-qtd').value = m.qtd;
+      row.querySelector('.orc-mat-unit').value = m.unit || '';
+    });
+    calcOrcTotal();
+  } else if (tipo === 'ordem_servico') {
+    ['numero','data','cliente','profissional','whatsapp','endereco','desc','valor','obs'].forEach(k => _docSet('os-' + k, d[k]));
+    _docSet('os-status', d.status || 'aberta');
+  } else {
+    ['cliente','data','whatsapp','valor','extenso','desc','numero'].forEach(k => _docSet('rec-' + k, d[k]));
+    _docSet('rec-pagamento', d.pagamento || 'Dinheiro');
+  }
+}
+
+function _docFormSujo(tipo) {
+  const cur = coletarDocumento(tipo);
+  if (_docBase[tipo] != null) return JSON.stringify(cur.dados) !== _docBase[tipo];
+  return !!(cur.cliente || (cur.dados.desc || '').trim());
+}
+
+function atualizarBannerDoc(tipo) {
+  const ban = document.getElementById('banner-' + tipo);
+  const btn = document.getElementById('btn-salvar-' + tipo);
+  const editando = !!_docEditando[tipo];
+  if (btn) btn.textContent = editando ? '💾 Atualizar' : '💾 Salvar';
+  if (!ban) return;
+  ban.style.display = editando ? 'block' : 'none';
+  ban.innerHTML = editando ? '✏️ Este documento já está salvo no <strong>Arquivo de Documentos</strong>. Clique em <strong>Atualizar</strong> para gravar as alterações ou em <strong>Limpar</strong> para começar um novo.' : '';
+}
+function docSairEdicao(tipo) { _docEditando[tipo] = null; _docBase[tipo] = null; atualizarBannerDoc(tipo); }
+
+async function salvarDocumento(tipo) {
+  const doc = coletarDocumento(tipo);
+  const t = DOC_TIPOS[tipo];
+  if (!doc.cliente) { toast('⚠️ Informe o nome do cliente para salvar.'); return; }
+  const btn = document.getElementById('btn-salvar-' + tipo);
+  if (btn) btn.disabled = true;
+  try {
+    const agora = new Date().toISOString();
+    const id = _docEditando[tipo] || _docUuid();
+    const existente = state.documentos.find(x => x.id === id);
+    const row = { id, tipo, numero: doc.numero, cliente: doc.cliente, valor_total: doc.valor_total, dados: doc.dados, atualizado_em: agora };
+    const { error } = await sb.from('documentos').upsert(row);
+    if (error) {
+      console.error('Erro ao salvar documento:', error);
+      toast('❌ Não foi possível salvar. Confira se a tabela "documentos" foi criada no Supabase (veja Arquivo de Documentos).', 6000);
+      return;
+    }
+    const local = Object.assign({}, existente || { criado_em: agora }, row);
+    if (existente) state.documentos[state.documentos.indexOf(existente)] = local; else state.documentos.unshift(local);
+    _docEditando[tipo] = id;
+    _docBase[tipo] = JSON.stringify(doc.dados);
+    atualizarBannerDoc(tipo);
+    // PDF pronto: gerado com o mesmo modelo da impressão e guardado no Storage
+    toast('⏳ Gerando e guardando o PDF...', 8000);
+    try {
+      const html = capturarHtmlDocumento(tipo);
+      await enviarPdfDocumento(tipo, id, html, t.label + ' - ' + doc.cliente);
+      toast('✅ ' + t.label + (existente ? ' atualizado' : ' salvo') + ' com o PDF no Arquivo de Documentos');
+    } catch (e) {
+      console.error('Erro ao gerar/enviar PDF:', e);
+      toast('⚠️ Dados salvos, mas o PDF não foi guardado. Rode o SQL atualizado no Supabase (criar_tabela_documentos.sql) e salve de novo.', 7000);
+    }
+  } finally { if (btn) btn.disabled = false; }
+}
+
+// ── PDF: mesmo modelo da impressão, convertido em arquivo e guardado no Storage ──
+const DOC_BUCKET = 'documentos';
+
+// Roda a função de impressão do tipo sem abrir janela e devolve o HTML do documento
+function capturarHtmlDocumento(tipo) {
+  const fn = { orcamento: imprimirOrcamento, ordem_servico: imprimirOS, recibo: imprimirRecibo }[tipo];
+  const abrirOriginal = window.open;
+  let html = '';
+  window.open = () => ({ document: { write(h) { html += h; }, close() {} } });
+  try { fn(); } finally { window.open = abrirOriginal; }
+  if (tipo === 'recibo') { const pv = document.getElementById('recibo-preview'); if (pv) pv.style.display = 'none'; }
+  if (!html) throw new Error('Não foi possível montar o documento');
+  return html.replace(/<script>window\.onload[\s\S]*?<\/script>/, '');
+}
+
+// Preenche o formulário com dados salvos, executa fn e restaura o que estava digitado
+function comFormPreenchido(tipo, dados, fn) {
+  const backup = coletarDocumento(tipo).dados;
+  preencherForm(tipo, dados);
+  try { return fn(); } finally { preencherForm(tipo, backup); }
+}
+
+async function htmlParaPdfBlob(html, titulo) {
+  if (!window.html2canvas || !window.jspdf) throw new Error('Bibliotecas de PDF não carregaram (verifique a internet)');
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;visibility:hidden';
+  document.body.appendChild(iframe);
+  try {
+    const doc = iframe.contentDocument;
+    doc.open(); doc.write(html); doc.close();
+    await new Promise(r => setTimeout(r, 50));
+    await Promise.all(Array.from(doc.images).map(img => img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })));
+    if (doc.fonts && doc.fonts.ready) { try { await doc.fonts.ready; } catch (e) {} }
+    const raiz = doc.documentElement;
+    if (doc.body.getBoundingClientRect().bottom + 40 < 1123) doc.body.style.minHeight = '1043px'; // documento curto: página A4 inteira (marca d'água completa)
+    const altura = Math.max(Math.ceil(doc.body.getBoundingClientRect().bottom + 40), 400); // até o fim do conteúdo (sem página em branco)
+    const canvas = await window.html2canvas(raiz, { scale: 2, backgroundColor: '#ffffff', useCORS: true,
+      width: 794, height: altura, windowWidth: 794, windowHeight: altura });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    if (titulo) pdf.setProperties({ title: titulo });
+    const pxPorPagina = Math.floor(canvas.width * 297 / 210);
+    for (let y = 0, pg = 0; y < canvas.height - 8; y += pxPorPagina, pg++) {
+      const h = Math.min(pxPorPagina, canvas.height - y);
+      const parte = document.createElement('canvas');
+      parte.width = canvas.width; parte.height = h;
+      const ctx = parte.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, parte.width, parte.height);
+      ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+      if (pg > 0) pdf.addPage();
+      pdf.addImage(parte.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, h * 210 / canvas.width);
+    }
+    return pdf.output('blob');
+  } finally { iframe.remove(); }
+}
+
+async function enviarPdfDocumento(tipo, id, html, titulo) {
+  const blob = await htmlParaPdfBlob(html, titulo);
+  const path = tipo + '/' + id + '.pdf';
+  const up = await sb.storage.from(DOC_BUCKET).upload(path, blob, { contentType: 'application/pdf', upsert: true });
+  if (up.error) throw up.error;
+  const upd = await sb.from('documentos').update({ pdf_path: path }).eq('id', id);
+  if (upd.error) throw upd.error;
+  const d = state.documentos.find(x => x.id === id); if (d) d.pdf_path = path;
+  return path;
+}
+
+// Abre o PDF guardado (se ainda não existir, como nos documentos salvos antes, gera agora)
+async function abrirPdfDocumento(id) {
+  const d = state.documentos.find(x => x.id === id); if (!d) return;
+  const win = window.open('', '_blank'); // abre já no clique, para o navegador não bloquear
+  if (win) { try { win.document.write('<p style="font-family:sans-serif;padding:24px">Carregando PDF...</p>'); } catch (e) {} }
+  try {
+    if (!d.pdf_path) {
+      toast('⏳ Gerando o PDF...', 8000);
+      const html = comFormPreenchido(d.tipo, d.dados, () => capturarHtmlDocumento(d.tipo));
+      await enviarPdfDocumento(d.tipo, d.id, html, (DOC_TIPOS[d.tipo] || {}).label + ' - ' + d.cliente);
+      renderArquivo();
+    }
+    const r = await sb.storage.from(DOC_BUCKET).createSignedUrl(d.pdf_path, 3600);
+    if (r.error) throw r.error;
+    if (win) win.location.href = r.data.signedUrl; else window.open(r.data.signedUrl, '_blank');
+  } catch (e) {
+    console.error('Erro ao abrir PDF:', e);
+    if (win) win.close();
+    toast('❌ Não foi possível abrir o PDF. Confira se o SQL atualizado foi rodado no Supabase.', 6000);
+  }
+}
+
+async function carregarDocumentos() {
+  _docCarregando = true; _docErro = null;
+  try {
+    const { data, error } = await sb.from('documentos').select('*').order('criado_em', { ascending: false });
+    if (error) { _docErro = error; console.error('Erro ao carregar documentos:', error); }
+    else state.documentos = data || [];
+  } catch (e) { _docErro = e; console.error(e); }
+  _docCarregando = false;
+}
+
+async function abrirArquivo() {
+  renderArquivo();
+  await carregarDocumentos();
+  renderArquivo();
+}
+function filtrarArquivoBusca(v) { _docBusca = v || ''; renderArquivo(); }
+function filtrarArquivoTipo(t) { _docFiltro = t; renderArquivo(); }
+
+function renderArquivo() {
+  const lista = document.getElementById('arq-lista');
+  const tabs = document.getElementById('arq-tabs');
+  if (!lista || !tabs) return;
+  const docs = state.documentos;
+  const cont = k => k === 'todos' ? docs.length : docs.filter(d => d.tipo === k).length;
+  const abas = [['todos', 'Todos']].concat(Object.keys(DOC_TIPOS).map(k => [k, DOC_TIPOS[k].plural]));
+  tabs.innerHTML = abas.map(([k, nome]) =>
+    `<button class="btn btn-sm ${_docFiltro === k ? 'btn-primary' : 'btn-outline'}" onclick="filtrarArquivoTipo('${k}')">${nome} (${cont(k)})</button>`).join('');
+
+  if (_docCarregando && !docs.length) { lista.innerHTML = '<div class="empty"><p>Carregando documentos...</p></div>'; return; }
+  if (_docErro) {
+    lista.innerHTML = `<div class="empty" style="text-align:left"><p>Não foi possível carregar os documentos</p>
+      <span>A tabela <strong>documentos</strong> provavelmente ainda não existe no Supabase. Abra o <strong>SQL Editor</strong> do Supabase, cole o comando abaixo e clique em <strong>Run</strong>. Depois recarregue esta página.</span>
+      <pre style="background:#F5F5F5;border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:12px;font-size:12px;overflow:auto;white-space:pre;color:var(--text)">${_docEsc(DOC_SQL)}</pre></div>`;
+    return;
+  }
+  const q = _docBusca.trim().toLowerCase();
+  const itens = docs.filter(d => (_docFiltro === 'todos' || d.tipo === _docFiltro) &&
+    (!q || [d.cliente, d.numero, (d.dados && d.dados.desc)].some(x => (x || '').toLowerCase().includes(q))));
+  if (!itens.length) {
+    const vazio = (q || _docFiltro !== 'todos') ? 'Nenhum documento encontrado' : 'Nenhum documento salvo ainda';
+    lista.innerHTML = `<div class="empty"><p>${vazio}</p>${(q || _docFiltro !== 'todos') ? '' : '<span>Use o botão 💾 Salvar nas telas de Orçamento, Ordem de Serviço e Recibo.</span>'}</div>`;
+    return;
+  }
+  lista.innerHTML = itens.map(d => {
+    const t = DOC_TIPOS[d.tipo] || { label: d.tipo, icone: '📄' };
+    const dados = d.dados || {};
+    const data = _docData(dados.data) || new Date(d.criado_em).toLocaleDateString('pt-BR');
+    const desc = (dados.desc || '').replace(/\s+/g, ' ').trim();
+    const descCurta = desc.length > 90 ? desc.slice(0, 90) + '…' : desc;
+    return `<div class="list-item" style="flex-wrap:wrap">
+      <div style="font-size:26px">${t.icone}</div>
+      <div style="flex:1;min-width:190px">
+        <div style="font-size:15px;font-weight:600">${_docEsc(d.cliente || '—')}</div>
+        <div style="font-size:12px;color:var(--text2)">${t.label}${d.numero ? ' · Nº ' + _docEsc(d.numero) : ''} · ${data}</div>
+        ${descCurta ? `<div style="font-size:12px;color:var(--text3)">${_docEsc(descCurta)}</div>` : ''}
+      </div>
+      <div style="font-weight:700;color:var(--primary);min-width:96px;text-align:right">${brl(d.valor_total)}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-outline" title="Abrir / editar" onclick="abrirDocumento('${d.id}')">✏️ Abrir</button>
+        <button class="btn btn-sm btn-outline" title="${d.pdf_path ? 'Abrir o PDF guardado' : 'Gerar e abrir o PDF'}" onclick="abrirPdfDocumento('${d.id}')">📄 PDF</button>
+        <button class="btn btn-sm btn-outline" style="color:#25D366;border-color:#25D366" title="Reenviar pelo WhatsApp" onclick="docAcao('${d.id}','zap')">📲</button>
+        <button class="btn btn-sm" style="background:var(--red-light);color:var(--red);border:1px solid #ffcdd2" title="Excluir" onclick="excluirDocumento('${d.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Abre o documento salvo na tela de emissão para editar
+function abrirDocumento(id) {
+  const d = state.documentos.find(x => x.id === id); if (!d) return;
+  const tipo = d.tipo, t = DOC_TIPOS[tipo];
+  if (_docEditando[tipo] !== id && _docFormSujo(tipo) &&
+      !confirm('A tela de ' + t.label + ' tem dados não salvos. Substituir pelo documento selecionado?')) return;
+  openPage(t.pagina); // antes de preencher, para não sobrescrever a data
+  preencherForm(tipo, d.dados);
+  _docEditando[tipo] = id;
+  _docBase[tipo] = JSON.stringify(coletarDocumento(tipo).dados);
+  atualizarBannerDoc(tipo);
+  toast('✏️ ' + t.label + ' aberto para edição');
+}
+
+// Reenvia pelo WhatsApp usando o mesmo texto da tela, sem perder o que está digitado lá
+function docAcao(id, acao) {
+  const d = state.documentos.find(x => x.id === id); if (!d) return;
+  const tipo = d.tipo;
+  const fn = { orcamento: { imprimir: imprimirOrcamento, zap: enviarOrcamentoZap },
+               ordem_servico: { imprimir: imprimirOS, zap: enviarOSZap },
+               recibo: { imprimir: imprimirRecibo, zap: enviarReciboZap } }[tipo][acao];
+  comFormPreenchido(tipo, d.dados, fn);
+  if (tipo === 'recibo') { const pv = document.getElementById('recibo-preview'); if (pv) pv.style.display = 'none'; }
+}
+
+async function excluirDocumento(id) {
+  const d = state.documentos.find(x => x.id === id); if (!d) return;
+  const t = DOC_TIPOS[d.tipo] || { label: 'documento' };
+  if (!confirm('Excluir este ' + t.label.toLowerCase() + ' de ' + (d.cliente || 'cliente sem nome') + '? Esta ação não pode ser desfeita.')) return;
+  const { error } = await sb.from('documentos').delete().eq('id', id);
+  if (error) { console.error(error); toast('❌ Não foi possível excluir.'); return; }
+  if (d.pdf_path) { try { await sb.storage.from(DOC_BUCKET).remove([d.pdf_path]); } catch (e) { console.error(e); } }
+  state.documentos = state.documentos.filter(x => x.id !== id);
+  if (_docEditando[d.tipo] === id) docSairEdicao(d.tipo);
+  renderArquivo();
+  toast('🗑️ Documento excluído');
 }
 
 function abrirAppCliente() {
@@ -3232,7 +3684,11 @@ function pubEnviar() {
   };
   if (!state.solicitacoes) state.solicitacoes = [];
   state.solicitacoes.push(sol);
-  salvar();
+  sb.from('solicitacoes').insert({
+    id: sol.id, ts: sol.ts, cliente: sol.cliente, zap: sol.zap, servico: sol.servico,
+    icone: sol.icone, data: sol.data, hora: sol.hora, profissional: sol.profissional,
+    obs: sol.obs, valor: sol.valor, status: sol.status,
+  }).then(({ error }) => { if (error) { console.error('Erro ao enviar solicitação:', error); alert('Não foi possível enviar agora. Tente novamente ou chame no WhatsApp.'); } });
   atualizarBadge();
 
   renderTelaPublica('sucesso');
@@ -3266,7 +3722,7 @@ function pubAbrirZapPessoal() {
     const btnFechar = document.getElementById('pub-btn-fechar'); if (btnFechar) btnFechar.style.display = 'none';
     document.title = 'Agendar serviço';
 
-    await carregar();
+    await carregarPublico();
     if (state.config.cor) document.documentElement.style.setProperty('--primary', state.config.cor);
     abrirTelaPublica();
 
@@ -3276,6 +3732,7 @@ function pubAbrirZapPessoal() {
     return; // não inicializa o restante do painel administrativo
   }
 
+  await exigirLogin();
   await carregar();
   // Inicializa o rastreio de exclusões com o que veio do banco
   _ultimosIdsSolicitacoes = new Set(state.solicitacoes.map(s => s.id));
@@ -3848,7 +4305,7 @@ function epCarregarValoresAtuais() {
   if(kpiLabels[4]) document.getElementById('ep-txt-kpi5').value = kpiLabels[4].textContent.trim();
 
   // Menu
-  const navItems = document.querySelectorAll('.nav-item');
+  const navItems = document.querySelectorAll('.nav-item:not([data-page="arquivo"])');
   const navInputs = ['ep-nav1','ep-nav2','ep-nav3','ep-nav4','ep-nav5','ep-nav6','ep-nav7','ep-nav8','ep-nav9','ep-nav10','ep-nav11','ep-nav12','ep-nav13'];
   navItems.forEach((item, i) => {
     if(navInputs[i]) {
@@ -3969,7 +4426,7 @@ function epAplicar() {
   });
 
   // Menu lateral
-  const navItems = document.querySelectorAll('.nav-item');
+  const navItems = document.querySelectorAll('.nav-item:not([data-page="arquivo"])');
   const navInputs = ['ep-nav1','ep-nav2','ep-nav3','ep-nav4','ep-nav5','ep-nav6','ep-nav7','ep-nav8','ep-nav9','ep-nav10','ep-nav11','ep-nav12','ep-nav13'];
   navItems.forEach((item, i) => {
     const input = document.getElementById(navInputs[i]);
