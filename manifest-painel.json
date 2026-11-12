@@ -1,17 +1,21 @@
 {
-  "id": "./DASHBOARD-PROSERVICE_APP.html",
+  "id": "/PROservice/DASHBOARD-PROSERVICE_APP.html",
   "name": "PRO Service | Dashboard",
   "short_name": "PRO Dashboard",
-  "description": "Painel de gestão da PRO Service.",
+  "description": "Painel de gestão PRO Service: clientes, orçamentos, agenda e financeiro.",
   "lang": "pt-BR",
+  "dir": "ltr",
   "start_url": "./DASHBOARD-PROSERVICE_APP.html",
   "scope": "./DASHBOARD-PROSERVICE_APP.html",
   "display": "standalone",
-  "background_color": "#f4f6fa",
+  "orientation": "any",
+  "background_color": "#023072",
   "theme_color": "#023072",
+  "categories": ["business", "productivity"],
   "icons": [
-    {"src": "icon-192.png?v=4", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "icon-512.png?v=4", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-    {"src": "icon-maskable-512.png?v=4", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+    { "src": "icon-192.png?v=4", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png?v=4", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-192.png?v=4", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-maskable-512.png?v=4", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
