@@ -169,7 +169,7 @@ body.sbc .sidebar>:not(.brand):not(.group):not(.nav){display:none!important}
 <div id="pro-cad" style="display:none"><button class="pxbk" onclick="proVoltar()" aria-label="Voltar">&#8249;</button><h2>Criar conta</h2><p style="margin-bottom:6px">O acesso ao painel precisa ser liberado pelo administrador.</p><label for="pro-cd-em">E-mail</label><input id="pro-cd-em" type="email" placeholder="voce@email.com" autocomplete="username"><label for="pro-cd-pw">Senha</label><input id="pro-cd-pw" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"><label for="pro-cd-p2">Confirmar senha</label><input id="pro-cd-p2" type="password" placeholder="Repita a senha" autocomplete="new-password" onkeydown="if(event.key==='Enter')proCriar()"><button id="pro-cd-btn" class="pxbt" style="margin-top:24px" onclick="proCriar()">Criar conta</button><div id="pro-cd-err"></div></div>
 <div id="pro-pend" style="display:none"><h2>Aguardando liberação</h2><p id="pro-pend-tx"></p><button class="pxbt pxsec" onclick="proSairPend()">Sair</button></div>
 </div></div>
-<div id="pro-bar"><span id="pro-sync">Sincronizado</span><button id="pro-out" onclick="proSair()">Sair</button></div>
+<div id="pro-bar"><span id="pro-sync">Sincronizado</span><button id="pro-inst" onclick="proInstall()" style="display:none">Instalar app</button><button id="pro-out" onclick="proSair()">Sair</button></div>
 <script>(function(){
 var URL_='https://ftnhcbhgfeymwbjywdmp.supabase.co',KEY='sb_publishable_L0NsRLPB18V1E7jTkWja8Q_NlaTYj6L';
 var SYNC=['servillyData','proConfig','proApp','proFotos','proDocs','proFunil','proSbImp'];
@@ -1177,4 +1177,78 @@ body:not(.dark) .sidebar::-webkit-scrollbar-thumb{background:#cfd9e3}
 (()=>{const _r=render;render=function(){_r();const v=document.getElementById('view');if(v)v.dataset.pg=current};})();
 </script>
 <style>.sidebar .group b{display:block;white-space:nowrap;font-size:9px;letter-spacing:.4px}</style>
+<style>
+#pro-inst{background:#fff;color:#fd6106;border:1px solid #e3e8ef;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+#pwa-ov{position:fixed;inset:0;background:rgba(16,39,80,.5);z-index:2147483600;display:none;align-items:flex-end;justify-content:center;font-family:'Plus Jakarta Sans',Inter,'Segoe UI',Arial,sans-serif}
+#pwa-ov.on{display:flex}
+#pwa-sh{width:min(440px,100%);background:#fff;border-radius:20px 20px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px #00000030;text-align:center}
+@media(min-width:700px){#pwa-ov{align-items:center}#pwa-sh{border-radius:20px}}
+#pwa-sh img{width:64px;height:64px;border-radius:14px;object-fit:contain}
+#pwa-sh h2{margin:10px 0 4px;font-size:18px;color:#023072}
+#pwa-sh p{margin:0 0 14px;color:#6b778c;font-size:13px;line-height:1.5}
+#pwa-sh ol{text-align:left;margin:0 0 14px;padding-left:20px;color:#102750;font-size:13px;line-height:1.7}
+#pwa-sh .pbtn{width:100%;border:0;border-radius:12px;padding:15px 16px;background:#fd6106;color:#fff;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 6px 16px #fd61062e}
+#pwa-sh .pno{display:block;margin:12px auto 0;border:0;background:none;color:#6b778c;font-size:13px;font-weight:600;cursor:pointer}
+</style>
+<script>
+(function(){
+  var ua=navigator.userAgent||'';
+  var standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+  var ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var android=/Android/i.test(ua);
+  var inApp=/; wv\)|FBAN|FBAV|Instagram|GSA\/|Line\/|WhatsApp|Telegram/i.test(ua);
+  var deferred=null, shown=false, timerDone=false, KEY='proInstDismissPainel';
+
+  function dismissed(){try{var t=+localStorage.getItem(KEY)||0;return Date.now()-t<3*24*3600*1000}catch(e){return false}}
+  function remember(){try{localStorage.setItem(KEY,String(Date.now()))}catch(e){}}
+
+  var ov=document.createElement('div');ov.id='pwa-ov';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');
+  ov.innerHTML='<div id="pwa-sh"></div>';
+  function attach(){if(!ov.parentNode)document.body.appendChild(ov);var b=document.getElementById('pro-inst');if(b&&!standalone)b.style.display='';}
+  if(document.body)attach();else document.addEventListener('DOMContentLoaded',attach);
+  ov.addEventListener('click',function(e){if(e.target===ov)closeSheet(true)});
+
+  function chromeIntent(){return 'intent://'+location.host+location.pathname+'#Intent;scheme=https;package=com.android.chrome;end'}
+  function draw(){
+    var sh=document.getElementById('pwa-sh');if(!sh)return;
+    var h='<img src="icon-192.png" alt=""><h2>Instale o PRO Dashboard</h2>';
+    if(deferred){
+      h+='<p>Tenha o painel na tela inicial e acesse com um toque.</p><button class="pbtn" onclick="proDoInstall()">Instalar aplicativo</button>';
+    }else if(ios){
+      h+='<p>No iPhone a instalação é feita pelo Safari:</p><ol><li>Toque no botão <b>Compartilhar</b> (quadrado com seta para cima)</li><li>Escolha <b>Adicionar à Tela de Início</b></li><li>Toque em <b>Adicionar</b></li></ol>';
+    }else if(android&&inApp){
+      h+='<p>Para instalar, abra este link no <b>Chrome</b>.</p><button class="pbtn" onclick="location.href=\''+chromeIntent()+'\'">Abrir no Chrome</button>';
+    }else if(android){
+      h+='<p>Toque nos três pontinhos <b>⋮</b> do Chrome e escolha <b>Instalar app</b> (ou <b>Adicionar à tela inicial</b>).</p>';
+    }else{
+      h+='<p>No computador, clique no ícone de instalar na barra de endereço do navegador (Chrome ou Edge).</p>';
+    }
+    h+='<button class="pno" onclick="proSheetClose()">'+(deferred?'Agora não':'Fechar')+'</button>';
+    sh.innerHTML=h;
+  }
+  function openSheet(){draw();ov.classList.add('on');shown=true}
+  function closeSheet(remind){ov.classList.remove('on');if(remind)remember()}
+
+  window.proSheetClose=function(){closeSheet(true)};
+  window.proDoInstall=function(){
+    if(!deferred)return;
+    var d=deferred;deferred=null;closeSheet(false);
+    d.prompt();
+    if(d.userChoice)d.userChoice.then(function(c){if(c&&c.outcome!=='accepted')remember()});
+  };
+  window.proInstall=function(){if(deferred){window.proDoInstall();return}openSheet()};
+
+  function auto(){if(standalone||shown||dismissed())return;if(deferred||ios||android)openSheet()}
+  addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();deferred=e;
+    if(ov.classList.contains('on'))draw();else if(timerDone)auto();
+  });
+  addEventListener('appinstalled',function(){
+    deferred=null;closeSheet(false);remember();
+    var b=document.getElementById('pro-inst');if(b)b.style.display='none';
+    if(typeof toast==='function')try{toast('App instalado!')}catch(e){}
+  });
+  setTimeout(function(){timerDone=true;auto()},1800);
+})();
+</script>
 </body></html>
