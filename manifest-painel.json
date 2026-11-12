@@ -1,16 +1,33 @@
 {
-  "id": "./DASHBOARD-PROSERVICE_APP.html",
+  "id": "pro-service-painel",
   "name": "PRO Dashboard",
   "short_name": "PRO Dashboard",
   "description": "Painel administrativo PRO Service",
+  "lang": "pt-BR",
   "start_url": "./DASHBOARD-PROSERVICE_APP.html",
-  "scope": "./DASHBOARD-PROSERVICE_APP.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#e4e8f1",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
   "theme_color": "#023072",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

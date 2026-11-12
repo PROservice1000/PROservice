@@ -284,15 +284,21 @@ state.page="cover";render();
 addEventListener("pageshow",e=>{if(e.persisted){state.user=null;state.page="cover";render()}});
 </script>
 <style>
-#pwa-ov{position:fixed;inset:0;background:rgba(16,39,80,.5);z-index:60;display:none;align-items:flex-end;justify-content:center}
+#pwa-bn{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2147483500;display:none;align-items:center;gap:10px;background:#023072;color:#fff;border-radius:16px;padding:10px 10px 10px 14px;box-shadow:0 8px 28px #0000004d;font-family:'Plus Jakarta Sans',Inter,'Segoe UI',Arial,sans-serif;max-width:460px;margin:0 auto}
+#pwa-bn.on{display:flex}
+#pwa-bn span{flex:1;font-size:13px;font-weight:600;line-height:1.3}
+#pwa-bn button{border:0;cursor:pointer;font-family:inherit}
+#pwa-bn .go{background:#fd6106;color:#fff;font-weight:700;font-size:13px;border-radius:10px;padding:10px 14px}
+#pwa-bn .x{background:none;color:#ffffffb0;font-size:20px;padding:4px 8px;line-height:1}
+#pwa-ov{position:fixed;inset:0;background:rgba(16,39,80,.5);z-index:2147483600;display:none;align-items:flex-end;justify-content:center}
 #pwa-ov.on{display:flex}
 #pwa-sh{width:min(440px,100%);background:#fff;border-radius:20px 20px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px #00000030;text-align:center}
 #pwa-sh img{width:64px;height:64px;border-radius:14px;object-fit:contain}
 #pwa-sh h2{margin:10px 0 4px;font-size:18px;color:#023072}
 #pwa-sh p{margin:0 0 14px;color:#6b778c;font-size:13px;line-height:1.5}
 #pwa-sh ol{text-align:left;margin:0 0 14px;padding-left:20px;color:#102750;font-size:13px;line-height:1.7}
-#pwa-sh .pbtn{width:100%;border-radius:12px;padding:15px 16px;background:#fd6106;color:#fff;font-weight:700;box-shadow:0 6px 16px #fd61062e}
-#pwa-sh .pno{display:block;margin:12px auto 0;color:#6b778c;font-size:13px;font-weight:600}
+#pwa-sh .pbtn{width:100%;border:0;font-size:14px;cursor:pointer;border-radius:12px;padding:15px 16px;background:#fd6106;color:#fff;font-weight:700;box-shadow:0 6px 16px #fd61062e}
+#pwa-sh .pno{display:block;border:0;background:none;cursor:pointer;margin:12px auto 0;color:#6b778c;font-size:13px;font-weight:600}
 </style>
 <script>
 (function(){
@@ -316,6 +322,14 @@ addEventListener("pageshow",e=>{if(e.persisted){state.user=null;state.page="cove
   document.addEventListener('DOMContentLoaded',function(){document.body.appendChild(ov)});
   if(document.body)document.body.appendChild(ov);
   ov.addEventListener('click',function(e){if(e.target===ov)closeSheet(true)});
+  // Banner fixo "Instalar app" (aparece em qualquer tela, inclusive no login)
+  var bn=document.createElement('div');bn.id='pwa-bn';
+  bn.innerHTML='<span>Instale o app no seu celular</span><button class="go" onclick="proInstall()">Instalar</button><button class="x" aria-label="Fechar" onclick="proBannerClose()">&times;</button>';
+  function mountBn(){if(!bn.parentNode)document.body.appendChild(bn);if(!standalone&&!bannerClosed())bn.classList.add('on')}
+  function bannerClosed(){try{return sessionStorage.getItem('proBn')==='1'}catch(e){return false}}
+  window.proBannerClose=function(){bn.classList.remove('on');try{sessionStorage.setItem('proBn','1')}catch(e){}};
+  if(document.body)mountBn();else document.addEventListener('DOMContentLoaded',mountBn);
+
 
   function chromeIntent(){
     return 'intent://'+location.host+location.pathname+'#Intent;scheme=https;package=com.android.chrome;end';
@@ -330,7 +344,7 @@ addEventListener("pageshow",e=>{if(e.persisted){state.user=null;state.page="cove
     }else if(android&&inApp){
       h+='<p>Para instalar, abra este link no <b>Chrome</b>.</p><button class="pbtn" onclick="location.href=\''+chromeIntent()+'\'">Abrir no Chrome</button>';
     }else if(android){
-      h+='<p>Toque nos três pontinhos <b>⋮</b> do Chrome e escolha <b>Instalar app</b> (ou <b>Adicionar à tela inicial</b>).</p>';
+      h+='<p>No menu do navegador (<b>⋮</b> ou <b>≡</b>) escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>. Se a opção não aparecer, abra este link no <b>Chrome</b>.</p><button class="pbtn" onclick="location.href=\''+chromeIntent()+'\'">Abrir no Chrome</button>';
     }else{
       h+='<p>No computador, clique no ícone de instalar na barra de endereço do navegador (Chrome ou Edge).</p>';
     }
@@ -361,11 +375,11 @@ addEventListener("pageshow",e=>{if(e.persisted){state.user=null;state.page="cove
     if(ov.classList.contains('on'))draw();else if(timerDone)auto();
   });
   addEventListener('appinstalled',function(){
-    deferred=null;closeSheet(false);remember();
+    deferred=null;closeSheet(false);remember();bn.classList.remove('on');
     var t=document.getElementById('toast');if(t){t.textContent='App instalado!';t.style.display='block';setTimeout(function(){t.style.display='none'},2500)}
   });
   var timerDone=false;
-  setTimeout(function(){timerDone=true;auto()},1800);
+  setTimeout(function(){timerDone=true;auto()},1200);
 
   // Botão "Instalar aplicativo" também na aba Perfil
   if(typeof window.profile==='function'&&!standalone){

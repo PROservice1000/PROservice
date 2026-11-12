@@ -1,24 +1,10 @@
-// Service worker do PRO Dashboard — rede primeiro, cache só como reserva offline.
-// Assim, quando você subir uma versão nova no GitHub, ela aparece sem ficar presa em versão antiga.
-const CACHE = 'pro-painel-v1';
-
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
-
-self.addEventListener('fetch', (e) => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return; // Supabase e fontes passam direto
-  e.respondWith(
-    fetch(req)
-      .then((res) => {
-        if (res && res.ok) {
-          const copia = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copia)).catch(() => {});
-        }
-        return res;
-      })
-      .catch(() => caches.match(req).then((r) => r || Response.error()))
-  );
+/* Service worker PRO Dashboard - necessário para o Chrome oferecer a instalação */
+const CACHE='pro-service-painel-v1';
+const SHELL=['./DASHBOARD-PROSERVICE_APP.html','icon-192.png'];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).catch(()=>{}));self.skipWaiting()});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE&&k.startsWith('pro-service-painel')).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',e=>{
+  const r=e.request;
+  if(r.method!=='GET'||new URL(r.url).origin!==location.origin)return;
+  e.respondWith(fetch(r).then(res=>{const cp=res.clone();caches.open(CACHE).then(c=>c.put(r,cp)).catch(()=>{});return res}).catch(()=>caches.match(r).then(m=>m||caches.match('./DASHBOARD-PROSERVICE_APP.html'))));
 });
