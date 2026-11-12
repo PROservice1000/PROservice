@@ -5,7 +5,7 @@
   "description": "Agende serviços residenciais",
   "lang": "pt-BR",
   "start_url": "./app-cliente.html",
-  "scope": "./",
+  "scope": "./app-cliente.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
