@@ -5,7 +5,7 @@
   "description": "Agende serviços residenciais com a PRO Service.",
   "lang": "pt-BR",
   "start_url": "./app-cliente.html",
-  "scope": "./",
+  "scope": "./app-cliente.html",
   "display": "standalone",
   "background_color": "#f7f8fb",
   "theme_color": "#023072",

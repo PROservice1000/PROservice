@@ -304,7 +304,7 @@ addEventListener("pageshow",e=>{if(e.persisted){state.user=null;state.page="cove
 (function(){
   if('serviceWorker' in navigator){
     addEventListener('load',function(){
-      navigator.serviceWorker.register('sw-cliente.js?v=4',{scope:'./'}).catch(function(){});
+      navigator.serviceWorker.register('sw-cliente.js?v=4',{scope:new URL('app-cliente.html',location.href).pathname}).catch(function(){});
     });
   }
   var ua=navigator.userAgent||'';
