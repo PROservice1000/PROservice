@@ -2,6 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest-cliente.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-cliente-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon-cliente.png">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PRO Service"><meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#023072"><meta name="color-scheme" content="light">
 <title>PRO Service | Agendamentos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Kaushan+Script&display=swap">
@@ -38,7 +43,7 @@ main{padding:22px 18px 28px;animation:in .25s ease}@keyframes in{from{opacity:0;
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:15px;margin-bottom:11px;box-shadow:var(--shadow)}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.muted{color:var(--muted);font-size:12px}.price{color:var(--orange);font-weight:800}
 .pro{display:flex;align-items:center;gap:12px;text-align:left;width:100%;background:#fff;border:1.5px solid var(--line);border-radius:var(--r);padding:13px;margin-bottom:10px}.pro.selected{border-color:var(--orange);background:#fff8f2}.avatar{width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}
 .radio{width:20px;height:20px;border-radius:50%;border:2px solid #c3cad6;display:grid;place-items:center;flex:none}.selected .radio{border-color:var(--orange);background:radial-gradient(var(--orange) 45%,transparent 50%)}
-.date-strip{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;margin:12px -18px 6px;padding:2px 18px 12px;scrollbar-width:thin;scrollbar-color:#8fa6cc #e3eaf4;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}.date-strip::-webkit-scrollbar{height:8px}.date-strip::-webkit-scrollbar-track{background:#e3eaf4;border-radius:8px;margin:0 18px}.date-strip::-webkit-scrollbar-thumb{background:#8fa6cc;border-radius:8px}.date-strip::-webkit-scrollbar-thumb:hover{background:#023072}.date{flex:none;width:58px;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:10px 2px;text-align:center;font-size:11px;color:var(--muted);text-transform:capitalize}.date b{display:block;font-size:18px;color:var(--navy);margin:2px 0}.date:disabled{opacity:.38;background:#eef2f8;cursor:not-allowed}.date.selected{background:var(--blue);border-color:var(--blue);color:#d7e3f5}.date.selected b{color:#fff}
+.date-strip{display:flex;gap:8px;overflow-x:auto;margin:12px -18px 6px;padding:2px 18px;scrollbar-width:none}.date{flex:none;width:58px;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:10px 2px;text-align:center;font-size:11px;color:var(--muted);text-transform:capitalize}.date b{display:block;font-size:18px;color:var(--navy);margin:2px 0}.date.selected{background:var(--blue);border-color:var(--blue);color:#d7e3f5}.date.selected b{color:#fff}
 .times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.time{border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:12px 4px;color:var(--blue);font-weight:700;font-size:13px}.time.selected{background:var(--orange);border-color:var(--orange);color:#fff}
 .summaryline{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}.summaryline:last-child{border:0}.summaryline span{color:var(--muted)}.summaryline b{text-align:right}
 .status{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:700;white-space:nowrap;background:#fff3e9;color:#b25a1e}.status.ok{background:#e5f6ed;color:var(--green)}.status.no{background:#fdeaea;color:var(--red)}
@@ -135,12 +140,6 @@ const ini=n=>(n||"C").trim().split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpp
 const isoDay=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const fmt=(a,o={weekday:"short",day:"2-digit",month:"short"})=>a.iso?new Date(a.iso+"T12:00").toLocaleDateString("pt-BR",o).replace(/\./g,""):a.date;
 const days=()=>{let r=[],d=new Date();while(r.length<7){d.setDate(d.getDate()+1);if(d.getDay())r.push(isoDay(d))}return r};
-/* Dias sem atendimento: sábados, domingos e feriados. Para incluir outro dia (ex.: Carnaval, Corpus Christi, recesso), adicione em HOL_EXTRA no formato "AAAA-MM-DD":"motivo" */
-const HOL_FIXED={"01-01":"Confraternização Universal","04-21":"Tiradentes","05-01":"Dia do Trabalho","09-07":"Independência do Brasil","09-30":"Feriado municipal de Mossoró","10-03":"Feriado estadual (RN)","10-12":"Nossa Senhora Aparecida","11-02":"Finados","11-15":"Proclamação da República","11-20":"Consciência Negra","12-13":"Feriado municipal de Mossoró","12-25":"Natal"};
-const HOL_EXTRA={};
-const goodFriday=y=>{const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),dy=(h+l-7*m+114)%31+1;return isoDay(new Date(y,mo-1,dy-2))};
-const holiday=iso=>HOL_EXTRA[iso]||HOL_FIXED[iso.slice(5)]||(goodFriday(+iso.slice(0,4))===iso?"Sexta-feira Santa":"");
-const calDays=()=>{const n=new Date(),today=isoDay(n),r=[];for(let m=0;m<2;m++){const y=new Date(n.getFullYear(),n.getMonth()+m,1),last=new Date(y.getFullYear(),y.getMonth()+1,0).getDate();for(let i=1;i<=last;i++){const t=new Date(y.getFullYear(),y.getMonth(),i),iso=isoDay(t),w=t.getDay(),h=holiday(iso),why=iso<=today?"Data indisponível":w===0?"Domingo":w===6?"Sábado":h;r.push({iso,ok:!why,why})}}return r};
 const isPast=a=>a.iso&&a.iso<isoDay(new Date());
 const active=a=>a.status!=="Cancelado"&&!isPast(a);
 const stCls=s=>s==="Confirmado"?"ok":s==="Cancelado"?"no":"";
@@ -175,11 +174,7 @@ function home(){const nx=state.appointments.filter(active).sort((a,b)=>(a.iso+a.
 function servicesPage(){shell(`<div class="eyebrow">PRO Service</div><h1 class="heading">Escolha o serviço</h1><p class="sub">Selecione o tipo de atendimento que você precisa.</p><div class="grid">${services.map(serviceCard).join("")}</div>`)}
 function chooseService(i){state.d=blank();state.d.service=i;go("professionals")}
 function prosPage(){const d=state.d;flow(1,"goTab('servicos')","Escolha o profissional",`Serviço: <b>${services[d.service][0]}</b>`,professionals.map((p,i)=>`<button class="pro ${d.pro===i?"selected":""}" role="radio" aria-checked="${d.pro===i}" onclick="state.d.pro=${i};render()"><div class="avatar">${i===2?I("user",20):ini(p[0])}</div><div style="flex:1"><b>${p[0]}</b><div class="muted">${p[1]}</div><div class="muted" style="color:var(--orange);margin-top:2px">${p[2]}</div></div><div class="radio"></div></button>`).join("")+`<div class="notice">${I("info",18)}<span>A confirmação da disponibilidade e do valor será realizada pela equipe PRO Service.</span></div>`,"Continuar","go('schedule')")}
-function dateWheel(e,el){const dx=Math.abs(e.deltaY)>Math.abs(e.deltaX)?e.deltaY:e.deltaX,n=el.scrollLeft+dx;if(dx&&n>=0&&n<=el.scrollWidth-el.clientWidth){el.scrollLeft=n;e.preventDefault()}}
-function pickDate(x,b){const p=b.parentNode.scrollLeft;state.d.date=x;render();const st=document.querySelector(".date-strip");if(st)st.scrollLeft=p}
-function centerDate(){const st=document.querySelector(".date-strip");if(!st)return;const t=st.querySelector(".date.selected")||st.querySelector(".date:not(:disabled)");if(t)st.scrollLeft=Math.max(0,t.getBoundingClientRect().left-st.getBoundingClientRect().left+st.scrollLeft-18)}
-function schedulePage(){schedulePage0();centerDate()}
-function schedulePage0(){const d=state.d;flow(2,"go('professionals')","Data e horário","Escolha quando prefere receber o atendimento.",`<div class="date-strip" role="radiogroup" aria-label="Data" onwheel="dateWheel(event,this)">${calDays().map(c=>{const x=c.iso,t=new Date(x+"T12:00");return `<button class="date ${d.date===x?"selected":""}" ${c.ok?"":`disabled title="${c.why}"`} onclick="pickDate('${x}',this)">${t.toLocaleDateString("pt-BR",{weekday:"short"}).replace(".","")}<b>${String(t.getDate()).padStart(2,"0")}</b>${t.toLocaleDateString("pt-BR",{month:"short"}).replace(".","")}</button>`}).join("")}</div><div class="section-title"><h3>Horários preferidos</h3></div><div class="times">${times.map(t=>`<button class="time ${d.time===t?"selected":""}" onclick="state.d.time='${t}';render()">${t}</button>`).join("")}</div><div class="notice">${I("info",18)}<span>Os horários são uma preferência. A equipe confirmará a disponibilidade.</span></div>`,"Continuar","go('confirm')",!(d.date&&d.time))}
+function schedulePage(){const d=state.d;flow(2,"go('professionals')","Data e horário","Escolha quando prefere receber o atendimento.",`<div class="date-strip" role="radiogroup" aria-label="Data">${days().map(x=>{const t=new Date(x+"T12:00");return `<button class="date ${d.date===x?"selected":""}" onclick="state.d.date='${x}';render()">${t.toLocaleDateString("pt-BR",{weekday:"short"}).replace(".","")}<b>${String(t.getDate()).padStart(2,"0")}</b>${t.toLocaleDateString("pt-BR",{month:"short"}).replace(".","")}</button>`}).join("")}</div><div class="section-title"><h3>Horários preferidos</h3></div><div class="times">${times.map(t=>`<button class="time ${d.time===t?"selected":""}" onclick="state.d.time='${t}';render()">${t}</button>`).join("")}</div><div class="notice">${I("info",18)}<span>Os horários são uma preferência. A equipe confirmará a disponibilidade.</span></div>`,"Continuar","go('confirm')",!(d.date&&d.time))}
 function confirmPage(){const d=state.d,s=services[d.service],a={iso:d.date};
  flow(3,"go('schedule')","Confirmar solicitação","Confira os dados e informe o local do atendimento.",`<div class="card"><div class="summaryline"><span>Serviço</span><b>${s[0]}</b></div><div class="summaryline"><span>Profissional</span><b>${professionals[d.pro][0]}</b></div><div class="summaryline"><span>Data e horário</span><b>${esc(fmt(a))} • ${d.time}</b></div><div class="summaryline"><span>Valor</span><b class="price">Sob orçamento</b></div></div><div class="field"><label for="addr">Endereço / bairro do atendimento</label><input id="addr" autocomplete="street-address" placeholder="Rua, número e bairro" value="${esc(d.address)}" oninput="state.d.address=this.value;document.querySelector('.cta .primary').disabled=this.value.trim().length<5"></div><div class="field"><label for="pay">Forma de pagamento preferida</label><select id="pay" onchange="state.d.payment=this.value">${["No local","Pix","Cartão"].map(o=>`<option ${d.payment===o?"selected":""}>${o}</option>`).join("")}</select></div><div class="field"><label for="note">Detalhes do serviço (opcional)</label><textarea id="note" rows="3" placeholder="Descreva o que precisa ser feito..." oninput="state.d.note=this.value">${esc(d.note)}</textarea></div>${draftPhotos()}<div class="notice">${I("info",18)}<span>Este pedido não é uma contratação automática. A PRO Service entrará em contato para validar endereço, escopo, preço e disponibilidade.</span></div>`,"Enviar solicitação","book()",d.address.trim().length<5)}
 function book(){const d=state.d,s=services[d.service],id=Date.now(),a={id,protocol:"PRS-"+id.toString(36).slice(-5).toUpperCase(),service:s[0],icon:s[2],pro:professionals[d.pro][0],iso:d.date,time:d.time,status:"Aguardando confirmação",payment:d.payment,address:d.address.trim(),note:d.note.trim()};
@@ -287,4 +282,104 @@ function cover(){const u=state.user,n=state.appointments.filter(a=>a.status!=="C
 function render(){const m={cover,welcome,login:()=>auth(false),register:()=>auth(true),home,services:servicesPage,photos:photosPage,professionals:prosPage,schedule:schedulePage,confirm:confirmPage,success,appointments,detail,profile,edit,settings};(m[state.page]||welcome)()}
 state.page="cover";render();
 addEventListener("pageshow",e=>{if(e.persisted){state.user=null;state.page="cover";render()}});
-</script></body></html>
+</script>
+<style>
+#pwa-ov{position:fixed;inset:0;background:rgba(16,39,80,.5);z-index:60;display:none;align-items:flex-end;justify-content:center}
+#pwa-ov.on{display:flex}
+#pwa-sh{width:min(440px,100%);background:#fff;border-radius:20px 20px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px #00000030;text-align:center}
+#pwa-sh img{width:64px;height:64px;border-radius:14px;object-fit:contain}
+#pwa-sh h2{margin:10px 0 4px;font-size:18px;color:#023072}
+#pwa-sh p{margin:0 0 14px;color:#6b778c;font-size:13px;line-height:1.5}
+#pwa-sh ol{text-align:left;margin:0 0 14px;padding-left:20px;color:#102750;font-size:13px;line-height:1.7}
+#pwa-sh .pbtn{width:100%;border-radius:12px;padding:15px 16px;background:#fd6106;color:#fff;font-weight:700;box-shadow:0 6px 16px #fd61062e}
+#pwa-sh .pno{display:block;margin:12px auto 0;color:#6b778c;font-size:13px;font-weight:600}
+</style>
+<script>
+(function(){
+  if('serviceWorker' in navigator){
+    addEventListener('load',function(){
+      navigator.serviceWorker.register('sw-cliente.js',{scope:location.pathname}).catch(function(){});
+    });
+  }
+  var ua=navigator.userAgent||'';
+  var standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+  var ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var android=/Android/i.test(ua);
+  var inApp=/; wv\)|FBAN|FBAV|Instagram|GSA\/|Line\/|WhatsApp|Telegram/i.test(ua);
+  var deferred=null, shown=false, KEY='proInstDismiss';
+
+  function dismissed(){try{var t=+localStorage.getItem(KEY)||0;return Date.now()-t<3*24*3600*1000}catch(e){return false}}
+  function remember(){try{localStorage.setItem(KEY,String(Date.now()))}catch(e){}}
+
+  var ov=document.createElement('div');ov.id='pwa-ov';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');
+  ov.innerHTML='<div id="pwa-sh"></div>';
+  document.addEventListener('DOMContentLoaded',function(){document.body.appendChild(ov)});
+  if(document.body)document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){if(e.target===ov)closeSheet(true)});
+
+  function chromeIntent(){
+    return 'intent://'+location.host+location.pathname+'#Intent;scheme=https;package=com.android.chrome;end';
+  }
+  function draw(){
+    var sh=document.getElementById('pwa-sh');if(!sh)return;
+    var h='<img src="icon-cliente-192.png" alt=""><h2>Instale o app PRO Service</h2>';
+    if(deferred){
+      h+='<p>Tenha o app na tela inicial do seu aparelho e agende serviços com um toque.</p><button class="pbtn" onclick="proDoInstall()">Instalar aplicativo</button>';
+    }else if(ios){
+      h+='<p>No iPhone a instalação é feita pelo Safari:</p><ol><li>Toque no botão <b>Compartilhar</b> (quadrado com seta para cima)</li><li>Escolha <b>Adicionar à Tela de Início</b></li><li>Toque em <b>Adicionar</b></li></ol>';
+    }else if(android&&inApp){
+      h+='<p>Para instalar, abra este link no <b>Chrome</b>.</p><button class="pbtn" onclick="location.href=\''+chromeIntent()+'\'">Abrir no Chrome</button>';
+    }else if(android){
+      h+='<p>Toque nos três pontinhos <b>⋮</b> do Chrome e escolha <b>Instalar app</b> (ou <b>Adicionar à tela inicial</b>).</p>';
+    }else{
+      h+='<p>No computador, clique no ícone de instalar na barra de endereço do navegador (Chrome ou Edge).</p>';
+    }
+    h+='<button class="pno" onclick="proSheetClose()">'+(deferred?'Agora não':'Fechar')+'</button>';
+    sh.innerHTML=h;
+  }
+  function openSheet(){draw();ov.classList.add('on');shown=true}
+  function closeSheet(remind){ov.classList.remove('on');if(remind)remember()}
+
+  window.proSheetClose=function(){closeSheet(true)};
+  window.proDoInstall=function(){
+    if(!deferred)return;
+    var d=deferred;deferred=null;closeSheet(false);
+    d.prompt();
+    if(d.userChoice)d.userChoice.then(function(c){if(c&&c.outcome!=='accepted')remember()});
+  };
+  window.proInstall=function(){
+    if(deferred){window.proDoInstall();return}
+    openSheet();
+  };
+
+  function auto(){
+    if(standalone||shown||dismissed())return;
+    if(deferred||ios||android)openSheet();
+  }
+  addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();deferred=e;
+    if(ov.classList.contains('on'))draw();else if(timerDone)auto();
+  });
+  addEventListener('appinstalled',function(){
+    deferred=null;closeSheet(false);remember();
+    var t=document.getElementById('toast');if(t){t.textContent='App instalado!';t.style.display='block';setTimeout(function(){t.style.display='none'},2500)}
+  });
+  var timerDone=false;
+  setTimeout(function(){timerDone=true;auto()},1800);
+
+  // Botão "Instalar aplicativo" também na aba Perfil
+  if(typeof window.profile==='function'&&!standalone){
+    var orig=window.profile;
+    window.profile=function(){
+      orig.apply(this,arguments);
+      var m=document.querySelector('#app main');
+      if(m&&!document.getElementById('pwa-card')){
+        var c=document.createElement('div');c.className='card';c.id='pwa-card';
+        c.innerHTML='<b>Instalar aplicativo</b><p class="muted" style="margin:4px 0 0">Tenha o PRO Service na tela inicial do aparelho.</p><button class="secondary" onclick="proInstall()">Instalar aplicativo</button>';
+        m.appendChild(c);
+      }
+    };
+  }
+})();
+</script>
+</body></html>
