@@ -1,13 +1,13 @@
 /* Service worker do PRO Dashboard (escopo: apenas DASHBOARD-PROSERVICE_APP.html) */
-var CACHE = 'proservice-painel-v5';
+var CACHE = 'proservice-painel-v7';
 var PAGE = 'DASHBOARD-PROSERVICE_APP.html';
 var SHELL = [
   PAGE,
-  'manifest-painel.json?v=5',
-  'icon-192.png?v=5',
-  'icon-512.png?v=5',
-  'icon-32.png?v=5',
-  'apple-touch-icon.png?v=5'
+  'manifest-painel.json?v=7',
+  'icon-192.png?v=7',
+  'icon-512.png?v=7',
+  'icon-32.png?v=7',
+  'apple-touch-icon.png?v=7'
 ];
 
 self.addEventListener('install', function (e) {
