@@ -196,8 +196,8 @@ async function importar(){
  try{var r=await sb.from('solicitacoes').select('*').eq('status','pendente');if(r.error||!r.data||!r.data.length)return false;
   var imp=JSON.parse(ls('proSbImp')||'[]'),d=JSON.parse(ls('servillyData')||'{}'),n=0;d['Solicitações']=d['Solicitações']||[];
   r.data.forEach(function(s){var id=String(s.id);if(imp.indexOf(id)>=0)return;imp.push(id);n++;
-   d['Solicitações'].push({'Cliente':s.cliente||'','Telefone':s.zap||'','Origem':'Meu App','Serviço solicitado':s.servico||'','Data':s.data||'','Endereço':'','Descrição':[s.obs,s.hora?'Horário: '+s.hora:'',s.profissional?'Profissional: '+s.profissional:''].filter(Boolean).join(' · '),'Status':'Nova'})});
-  if(!n)return false;put('servillyData',JSON.stringify(d));put('proSbImp',JSON.stringify(imp));
+   d['Solicitações'].push({'Cliente':s.cliente||'','Telefone':s.zap||'','Origem':'Meu App','Serviço solicitado':s.servico||'','Data':s.data||'','Endereço':s.endereco||'','Descrição':[s.protocolo?'Protocolo: '+s.protocolo:'',s.obs,s.hora?'Horário: '+s.hora:'',s.profissional?'Profissional: '+s.profissional:''].filter(Boolean).join(' · '),'Status':'Nova'})});
+  if(!n)return false;put('servillyData',JSON.stringify(d));put('proSbImp',JSON.stringify(imp));window.__novasSol=n;
   var x=dirty();['servillyData','proSbImp'].forEach(function(k){if(x.indexOf(k)<0)x.push(k)});setDirty(x);return true}
  catch(e){return false}}
 async function pull(){
@@ -267,6 +267,17 @@ async function init(){
   if(aok()&&!navigator.onLine&&ls('servillyData')!=null){start();status('off');return}
   show('pro-chk',false);show('pro-welcome',true);return}
  enter()}
+
+async function atualizarSolicitacoes(){
+ if(!ready||!sb||!navigator.onLine||document.visibilityState!=='visible')return;
+ try{var s=(await sb.auth.getSession()).data.session;if(!s)return;
+  if(await importar()){
+   try{data=JSON.parse(ls('servillyData')||'{}');Object.keys(modules).forEach(function(k){if(!data[k])data[k]=[]})}catch(e){}
+   try{render()}catch(e){}
+   try{var t=document.getElementById('toast');if(t){t.textContent=(window.__novasSol||1)+' nova(s) solicitação(ões) do App Cliente';t.style.display='block';setTimeout(function(){t.style.display='none'},4000)}}catch(e){}
+   await flush()}}
+ catch(e){}}
+setInterval(atualizarSolicitacoes,15000);
 window.addEventListener('online',function(){flush()});
 document.addEventListener('visibilitychange',function(){
  if(document.visibilityState!=='visible'||!ready||!sb||dirty().length||Date.now()-lastPull<30000||!navigator.onLine)return;
