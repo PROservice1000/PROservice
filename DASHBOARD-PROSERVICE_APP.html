@@ -817,7 +817,7 @@ SG['Solicitações']=['Nova','solicitação'];
 PX.solIc=s=>{s=String(s||'').toLowerCase();return /el[eé]tric|segur|c[âa]mer|alarme|energia/.test(s)?'⚡':/m[oó]ve|montar|marcen/.test(s)?'🪑':/hidr|encan|vazamento|chuveiro/.test(s)?'🚿':/pint/.test(s)?'🎨':'🛠️'};
 PX.solMsg=r=>{let sv=r['Serviço solicitado']||'serviço',hr=r.Horário||((String(r.Descrição||'').match(/Hor[aá]rio:\s*(\d{1,2}:\d{2})/)||[])[1]||''),ok=/confirm/i.test(String(r.Status||''));
  if(!ok)return 'Olá, '+(r.Cliente||'')+'! Sobre sua solicitação de "'+sv+'"'+(r.Data?' para '+br(r.Data)+(hr?' às '+hr:''):'')+'.';
- return 'Olá, '+(r.Cliente||'')+'! ✅ Seu agendamento foi *confirmado* pela PRO Service.\n\nServiço: '+sv+(r.Data?'\nData: '+br(r.Data)+(hr?' às '+hr:''):'')+(r.Endereço?'\nEndereço: '+r.Endereço:'')+(r.Protocolo?'\nProtocolo: '+r.Protocolo:'')+'\n\nQualquer dúvida, é só responder esta mensagem. Obrigado pela confiança!'};
+ return 'Olá, sou o Jair Almeida, Gerente da Proservice! Sobre sua solicitação de "'+sv+'" está confirmado'+(r.Data?' para '+br(r.Data):'')+'. Alguma dúvida é só nos comunicar.'};
 PX.solWa=r=>{let dg=String(r.Telefone||'').replace(/\D/g,''),n=dg&&!dg.startsWith('55')?'55'+dg:dg;return n?'https://wa.me/'+n+'?text='+encodeURIComponent(PX.solMsg(r)):''};
 PX.solSet=(i,st)=>{let r=(data['Solicitações']||[])[i];if(!r)return;if(st==='Cancelado'&&!confirm('Cancelar esta solicitação? O cliente será avisado no app.'))return;
  r.Status=st;save();
