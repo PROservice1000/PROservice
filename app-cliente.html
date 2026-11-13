@@ -182,14 +182,14 @@ const SB_URL="https://ftnhcbhgfeymwbjywdmp.supabase.co",SB_KEY="sb_publishable_L
 let _sb=null;const sbc=()=>{try{if(!_sb&&window.supabase)_sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false}})}catch(e){}return _sb};
 function rowFor(a,full){const u=a.user||state.user||{},d=a.iso||"";
  const extra=[a.note,a.payment?"Pagamento: "+a.payment:"",a.protocol?"Protocolo: "+a.protocol:""].filter(Boolean);
- const r={cliente:u.name||"Cliente do app",zap:u.phone||"",servico:a.service,data:d,hora:a.time||"",profissional:a.pro||"",status:"pendente"};
+ const r={id:Number(a.id).toString(36),ts:Number(a.id),cliente:u.name||"Cliente do app",zap:u.phone||"",servico:a.service,data:d,hora:a.time||"",profissional:a.pro||"",status:"pendente"};
  if(full){r.obs=extra.join(" · ");r.endereco=a.address||"";r.protocolo=a.protocol||""}
  else r.obs=["Endereço: "+(a.address||"—")].concat(extra).join(" · ");
  return r}
 async function pushOne(a){const c=sbc();if(!c)throw new Error("sem-sdk");
  let r=await c.from("solicitacoes").insert(rowFor(a,true));
  if(r.error&&/column|schema|PGRST204|42703/i.test((r.error.code||"")+" "+(r.error.message||""))) r=await c.from("solicitacoes").insert(rowFor(a,false));
- if(r.error)throw r.error}
+ if(r.error&&String(r.error.code)!=="23505")throw r.error}
 let _flushing=false;
 async function flushOutbox(){if(_flushing||!navigator.onLine)return;_flushing=true;
  try{let q=load("proOutbox",[]);const rest=[];
