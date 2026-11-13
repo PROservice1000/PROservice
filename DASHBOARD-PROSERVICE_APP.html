@@ -763,7 +763,7 @@ const stOf=r=>isOS()?(OSST.some(s=>s[0]===r.Status)?r.Status:OSST[0][0]):(FE.orc
 function fvItems(){let os=isOS(),td=agendaFmt(new Date()),w=new Date();w.setDate(w.getDate()-7);let wk=agendaFmt(w),q=fv.q.toLowerCase();
  return data[modK()].map((r,i)=>({...r,__i:i})).filter(r=>{let d=r[os?'Data de abertura':'Data de emissão']||'';return(!q||JSON.stringify(r).toLowerCase().includes(q))&&(fv.per==='Todo o período'||!d||(fv.per==='Este mês'?d.slice(0,7)===td.slice(0,7):d>=wk))})}
 function vcard(r){let os=isOS(),cur=stOf(r),num=os?(r['Número da OS']||''):String(r.__i+1).padStart(3,'0')+'/'+new Date().getFullYear();
- return `<article class="vc"><b>${num} · ${r.Cliente||''}</b><small>${r[os?'Descrição do serviço':'Assunto do serviço']||''}</small><em>${money(r[os?'Valor (R$)':'Valor total (R$)'])}</em><select class="mv" onchange="fmove(${r.__i},this.value)"><option value="">Mover para…</option>${stg().filter(s=>s[0]!==cur).map(s=>`<option>${s[0]}</option>`).join('')}</select></article>`}
+ return `<article class="vc"><b>${num} · ${r.Cliente||''}</b><small>${r[os?'Descrição do serviço':'Assunto do serviço']||''}</small><em>${money(r[os?'Valor (R$)':'Valor total (R$)'])}</em>${os&&cur==='Concluída'?PX.osPay(r):''}<select class="mv" onchange="fmove(${r.__i},this.value)"><option value="">Mover para…</option>${stg().filter(s=>s[0]!==cur).map(s=>`<option>${s[0]}</option>`).join('')}</select></article>`}
 function fmove(i,st){if(!st)return;if(isOS())data['Ordens de Serviço'][i].Status=st;else data.Orçamentos[i].Etapa=st==='Sem etapa'?'':st;save();toast('Movido para '+st);fvRefresh()}
 function fvBody(){let os=isOS(),it=fvItems(),S=stg();
  if(fv.mode==='Cards')return `<div class="cols">${S.map(([n,c])=>{let l=it.filter(r=>stOf(r)===n);return `<section class="cc" style="--c:${c}">${n} <span style="float:right">${l.length}</span>${l.length?l.map(vcard).join(''):`<p>Nenhum ${os?'serviço':'orçamento'} nesta etapa</p>`}</section>`}).join('')}</div>`;
@@ -819,6 +819,9 @@ PX.solMsg=r=>{let sv=r['Serviço solicitado']||'serviço',hr=r.Horário||((Strin
  if(!ok)return 'Olá, '+(r.Cliente||'')+'! Sobre sua solicitação de "'+sv+'"'+(r.Data?' para '+br(r.Data)+(hr?' às '+hr:''):'')+'.';
  return 'Olá, sou o Jair Almeida, Gerente da Proservice! Sobre sua solicitação de "'+sv+'" está confirmado'+(r.Data?' para '+br(r.Data):'')+'. Alguma dúvida é só nos comunicar.'};
 PX.solWa=r=>{let dg=String(r.Telefone||'').replace(/\D/g,''),n=dg&&!dg.startsWith('55')?'55'+dg:dg;return n?'https://wa.me/'+n+'?text='+encodeURIComponent(PX.solMsg(r)):''};
+PX.osPaid=r=>{let n=String(r['Número da OS']||'');return !!n&&(data.Recebimentos||[]).some(x=>x.Status==='Recebido'&&String(x.Descrição||'').includes(n))};
+PX.osPay=r=>PX.osPaid(r)?`<div><span class="sl-bd o" style="display:inline-block;margin-top:6px">💰 Recebido</span></div>`:`<div style="margin-top:6px"><span class="sl-bd" style="display:inline-block">⏳ A receber</span> <button class="pg-btn o" style="margin-top:6px;padding:5px 10px;font-size:10px" onclick="PX.osRecebe(${r.__i})">Registrar recebimento</button></div>`;
+PX.osRecebe=i=>{go('form:Recebimentos');let sel=document.getElementById('rcDoc');if(sel){sel.value='Ordens de Serviço:'+i;if(typeof recPick==='function')recPick()}};
 PX.solOS=r=>{if(r.OSNum)return false;data['Ordens de Serviço']=data['Ordens de Serviço']||[];let L=data['Ordens de Serviço'],y=new Date().getFullYear(),
  n=Math.max(L.length,...L.map(x=>parseInt(String(x['Número da OS']||'').replace(/\D/g,'').slice(0,3))||0))+1,
  hr=r.Horário||((String(r.Descrição||'').match(/Hor[aá]rio:\s*(\d{1,2}:\d{2})/)||[])[1]||''),
