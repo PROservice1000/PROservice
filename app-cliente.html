@@ -200,6 +200,18 @@ async function flushOutbox(){if(_flushing||!navigator.onLine)return;_flushing=tr
 function queueSend(a){const q=load("proOutbox",[]);q.push({id:a.id,protocol:a.protocol,service:a.service,pro:a.pro,iso:a.iso,time:a.time,payment:a.payment,address:a.address,note:a.note,user:{name:(state.user||{}).name,phone:(state.user||{}).phone}});store("proOutbox",q);flushOutbox()}
 window.addEventListener("online",flushOutbox);window.addEventListener("load",()=>setTimeout(flushOutbox,1500));
 setInterval(flushOutbox,30000);
+
+async function pullStatus(){const c=sbc();if(!c||!navigator.onLine)return;
+ const pend=state.appointments.filter(a=>a.status==="Aguardando confirmação"&&a.sent);if(!pend.length)return;
+ try{const r=await c.rpc("status_solicitacoes",{ids:pend.map(a=>Number(a.id).toString(36))});
+  if(r.error||!r.data)return;let ch=false;
+  r.data.forEach(x=>{const a=pend.find(p=>Number(p.id).toString(36)===x.id);if(!a)return;
+   const st=/cancel|recus/i.test(x.status||"")?"Cancelado":/confirm|convert/i.test(x.status||"")?"Confirmado":null;
+   if(st&&st!==a.status){a.status=st;ch=true}});
+  if(ch){store("proAppointments",state.appointments);if(["appointments","detail","home"].includes(state.page))render();toast("O status do seu pedido foi atualizado")}}catch(e){}}
+window.addEventListener("online",pullStatus);window.addEventListener("load",()=>setTimeout(pullStatus,2500));
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pullStatus()});
+setInterval(pullStatus,20000);
 function book(){const d=state.d,s=services[d.service],id=Date.now(),a={id,protocol:"PRS-"+id.toString(36).slice(-5).toUpperCase(),service:s[0],icon:s[2],pro:professionals[d.pro][0],iso:d.date,time:d.time,status:"Aguardando confirmação",payment:d.payment,address:d.address.trim(),note:d.note.trim()};
  if(d.photos&&d.photos.length){if(addPhotos(a,d.photos,"Antes"))a.photoCount=d.photos.length;else toast("Solicitação enviada, mas as fotos não couberam no armazenamento")}
   state.appointments.unshift(a);store("proAppointments",state.appointments);queueSend(a);state.open=id;state.d=blank();go("success")}

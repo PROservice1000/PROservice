@@ -196,7 +196,7 @@ async function importar(){
  try{var r=await sb.from('solicitacoes').select('*').eq('status','pendente');if(r.error||!r.data||!r.data.length)return false;
   var imp=JSON.parse(ls('proSbImp')||'[]'),d=JSON.parse(ls('servillyData')||'{}'),n=0;d['Solicitações']=d['Solicitações']||[];
   r.data.forEach(function(s){var id=String(s.id);if(imp.indexOf(id)>=0)return;imp.push(id);n++;
-   d['Solicitações'].push({'Cliente':s.cliente||'','Telefone':s.zap||'','Origem':'Meu App','Serviço solicitado':s.servico||'','Data':s.data||'','Endereço':s.endereco||'','Descrição':[s.protocolo?'Protocolo: '+s.protocolo:'',s.obs,s.hora?'Horário: '+s.hora:'',s.profissional?'Profissional: '+s.profissional:''].filter(Boolean).join(' · '),'Status':'Nova'})});
+   d['Solicitações'].push({'SbId':id,'Cliente':s.cliente||'','Telefone':s.zap||'','Origem':'Meu App','Serviço solicitado':s.servico||'','Data':s.data||'','Endereço':s.endereco||'','Descrição':[s.protocolo?'Protocolo: '+s.protocolo:'',s.obs,s.hora?'Horário: '+s.hora:'',s.profissional?'Profissional: '+s.profissional:''].filter(Boolean).join(' · '),'Status':'Nova'})});
   if(!n)return false;put('servillyData',JSON.stringify(d));put('proSbImp',JSON.stringify(imp));window.__novasSol=n;
   var x=dirty();['servillyData','proSbImp'].forEach(function(k){if(x.indexOf(k)<0)x.push(k)});setDirty(x);return true}
  catch(e){return false}}
@@ -268,9 +268,23 @@ async function init(){
   show('pro-chk',false);show('pro-welcome',true);return}
  enter()}
 
+
+function stq(){try{return JSON.parse(ls('proStQ')||'[]')}catch(e){return[]}}
+var stBusy=false;
+async function stFlush(){
+ if(!sb||stBusy||!navigator.onLine)return false;var q=stq();if(!q.length)return true;
+ stBusy=true;var rest=[];
+ for(var i=0;i<q.length;i++){try{
+   var r=await sb.from('solicitacoes').update({status:q[i].status}).eq('id',q[i].id).select('id');
+   if(r.error||!r.data||!r.data.length)throw (r.error||new Error('nenhuma linha atualizada'))}
+  catch(e){console.warn('Status não enviado',e);rest.push(q[i])}}
+ put('proStQ',JSON.stringify(rest));stBusy=false;return !rest.length}
+window.proSetStatus=function(id,status){
+ var q=stq().filter(function(x){return x.id!==id});q.push({id:id,status:status});put('proStQ',JSON.stringify(q));return stFlush()};
 async function atualizarSolicitacoes(){
  if(!ready||!sb||!navigator.onLine||document.visibilityState!=='visible')return;
  try{var s=(await sb.auth.getSession()).data.session;if(!s)return;
+  await stFlush();
   if(await importar()){
    try{data=JSON.parse(ls('servillyData')||'{}');Object.keys(modules).forEach(function(k){if(!data[k])data[k]=[]})}catch(e){}
    try{render()}catch(e){}
@@ -278,7 +292,7 @@ async function atualizarSolicitacoes(){
    await flush()}}
  catch(e){}}
 setInterval(atualizarSolicitacoes,15000);
-window.addEventListener('online',function(){flush()});
+window.addEventListener('online',function(){flush();stFlush()});
 document.addEventListener('visibilitychange',function(){
  if(document.visibilityState!=='visible'||!ready||!sb||dirty().length||Date.now()-lastPull<30000||!navigator.onLine)return;
  pull().then(function(ch){if(ch)location.reload()}).catch(function(){})});
@@ -799,13 +813,17 @@ modules['Solicitações']={fields:[['Cliente','text',1],['Telefone','tel'],['Ori
 M['Solicitações']={k:'ATENDIMENTO',t:'Solicitações',s:'Pedidos de serviço recebidos dos clientes. Converta em orçamento com um clique.',ph:'Buscar por cliente, telefone ou serviço',btn:'Nova solicitação',ee:'Nenhuma solicitação encontrada',es:'Registre os pedidos que chegam por WhatsApp, telefone ou pelo Meu App.',ec:'Registrar solicitação',nop:1};
 SG['Solicitações']=['Nova','solicitação'];
 /* ===== Solicitações: área SOMENTE de visualização dos pedidos feitos pelos clientes no App Cliente ===== */
-(()=>{let st=document.createElement('style');st.textContent=`.sl-card{background:#fff;border:1px solid #dce4ed;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px;justify-content:space-between;align-items:flex-start}.sl-l{display:flex;gap:12px;min-width:0}.sl-ic{font-size:20px;width:28px;text-align:center;flex:none}.sl-n{font-size:13px;font-weight:700;color:#0b1b2c}.sl-m{font-size:10px;color:#435675;margin-top:3px;display:flex;gap:6px;align-items:center;word-break:break-word}.sl-m.g{color:#8291a8}.sl-r{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none;width:130px}.sl-bd{font-size:9px;font-weight:700;padding:3px 9px;border-radius:99px;background:#fff4db;color:#b26a00}.sl-bd.c{background:#fde8e8;color:#c92a2a}.sl-bd.o{background:#e6f7ec;color:#2b8a3e}.sl-ts{font-size:9px;color:#8291a8}.sl-wa,.sl-ex{width:100%;text-align:center;border-radius:6px;padding:7px 10px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:none;display:block}.sl-wa{background:#25d366;color:#fff;border:0;text-decoration:underline}.sl-ex{background:#fff;color:#243b59;border:1px solid #cbd7e4}@media(max-width:520px){.sl-card{flex-direction:column}.sl-r{width:100%;align-items:stretch}}`;document.head.appendChild(st)})();
+(()=>{let st=document.createElement('style');st.textContent=`.sl-card{background:#fff;border:1px solid #dce4ed;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px;justify-content:space-between;align-items:flex-start}.sl-l{display:flex;gap:12px;min-width:0}.sl-ic{font-size:20px;width:28px;text-align:center;flex:none}.sl-n{font-size:13px;font-weight:700;color:#0b1b2c}.sl-m{font-size:10px;color:#435675;margin-top:3px;display:flex;gap:6px;align-items:center;word-break:break-word}.sl-m.g{color:#8291a8}.sl-r{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none;width:130px}.sl-bd{font-size:9px;font-weight:700;padding:3px 9px;border-radius:99px;background:#fff4db;color:#b26a00}.sl-bd.c{background:#fde8e8;color:#c92a2a}.sl-bd.o{background:#e6f7ec;color:#2b8a3e}.sl-ts{font-size:9px;color:#8291a8}.sl-wa,.sl-ok{width:100%;text-align:center;border-radius:6px;padding:7px 10px;font-size:10px;font-weight:700;cursor:pointer;display:block;background:#2b8a3e;color:#fff;border:0}.sl-ex{width:100%;text-align:center;border-radius:6px;padding:7px 10px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:none;display:block}.sl-wa{background:#25d366;color:#fff;border:0;text-decoration:underline}.sl-ex{background:#fff;color:#243b59;border:1px solid #cbd7e4}@media(max-width:520px){.sl-card{flex-direction:column}.sl-r{width:100%;align-items:stretch}}`;document.head.appendChild(st)})();
 PX.solIc=s=>{s=String(s||'').toLowerCase();return /el[eé]tric|segur|c[âa]mer|alarme|energia/.test(s)?'⚡':/m[oó]ve|montar|marcen/.test(s)?'🪑':/hidr|encan|vazamento|chuveiro/.test(s)?'🚿':/pint/.test(s)?'🎨':'🛠️'};
+PX.solSet=(i,st)=>{let r=(data['Solicitações']||[])[i];if(!r)return;if(st==='Cancelado'&&!confirm('Cancelar esta solicitação? O cliente será avisado no app.'))return;
+ r.Status=st;save();
+ if(r.SbId&&window.proSetStatus)window.proSetStatus(r.SbId,st==='Confirmado'?'confirmado':'cancelado').then(ok=>{if(!ok)toast('Salvo aqui, mas o aviso ao cliente ainda não foi enviado. Tentaremos de novo.')});
+ let a=document.getElementById('sl_area');if(a)a.innerHTML=PX.solList();toast(st==='Confirmado'?'Solicitação confirmada':'Solicitação cancelada')};
 PX.solList=()=>{let q=(document.getElementById('sl_q')?.value||'').toLowerCase(),all=data['Solicitações']||[],rows=all.map((r,i)=>({...r,__i:i})).reverse().filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q));
  if(!rows.length)return emptyCard(IC['Solicitações'],all.length?'Nenhuma solicitação encontrada':'Nenhuma solicitação recebida','Os pedidos feitos pelos clientes no App Cliente aparecem aqui.');
  return rows.map(r=>{let s=String(r.Status||'Pendente'),cl=/cancel|recus/i.test(s)?'c':/confirm|convert/i.test(s)?'o':'',tel=String(r.Telefone||''),dg=tel.replace(/\D/g,''),num=dg&&!dg.startsWith('55')?'55'+dg:dg,
   msg=encodeURIComponent('Olá, '+(r.Cliente||'')+'! Sobre sua solicitação'+(r['Serviço solicitado']?' de "'+r['Serviço solicitado']+'"':'')+(r.Data?' para '+br(r.Data)+(r.Horário?' às '+r.Horário:''):'')+'.');
-  return `<div class="sl-card"><div class="sl-l"><span class="sl-ic">${PX.solIc(r['Serviço solicitado'])}</span><div><div class="sl-n">${E(r.Cliente||'Cliente')}</div>${r['Serviço solicitado']?`<div class="sl-m">${I('M6 2h12v20H6zM9 7h6M9 11h6')} ${E(r['Serviço solicitado'])}</div>`:''}${r.Data?`<div class="sl-m g">${I('M3 5h18v16H3zM3 10h18M8 3v4M16 3v4')} ${br(r.Data)}${r.Horário?' às '+E(r.Horário):''}</div>`:''}${tel?`<div class="sl-m g">${I('M5 4h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 14l5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 6a2 2 0 0 1 2-2')} ${E(tel)}</div>`:''}${r.Descrição?`<div class="sl-m g">${E(r.Descrição)}</div>`:''}</div></div><div class="sl-r"><span class="sl-bd ${cl}">${E(s)}</span>${r['Criado em']?`<span class="sl-ts">${E(r['Criado em'])}</span>`:''}${num?`<a class="sl-wa" href="https://wa.me/${num}?text=${msg}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button class="sl-ex" onclick="del('Solicitações',${r.__i})">Excluir</button></div></div>`}).join('')};
+  return `<div class="sl-card"><div class="sl-l"><span class="sl-ic">${PX.solIc(r['Serviço solicitado'])}</span><div><div class="sl-n">${E(r.Cliente||'Cliente')}</div>${r['Serviço solicitado']?`<div class="sl-m">${I('M6 2h12v20H6zM9 7h6M9 11h6')} ${E(r['Serviço solicitado'])}</div>`:''}${r.Data?`<div class="sl-m g">${I('M3 5h18v16H3zM3 10h18M8 3v4M16 3v4')} ${br(r.Data)}${r.Horário?' às '+E(r.Horário):''}</div>`:''}${tel?`<div class="sl-m g">${I('M5 4h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 14l5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 6a2 2 0 0 1 2-2')} ${E(tel)}</div>`:''}${r.Descrição?`<div class="sl-m g">${E(r.Descrição)}</div>`:''}</div></div><div class="sl-r"><span class="sl-bd ${cl}">${E(s)}</span>${r['Criado em']?`<span class="sl-ts">${E(r['Criado em'])}</span>`:''}${num?`<a class="sl-wa" href="https://wa.me/${num}?text=${msg}" target="_blank" rel="noopener">WhatsApp</a>`:''}${/confirm|convert|cancel|recus/i.test(s)?'':`<button class="sl-ok" onclick="PX.solSet(${r.__i},'Confirmado')">Confirmar</button><button class="sl-ex" onclick="PX.solSet(${r.__i},'Cancelado')">Cancelar</button>`}<button class="sl-ex" onclick="del('Solicitações',${r.__i})">Excluir</button></div></div>`}).join('')};
 PX.solPage=()=>hd('ATENDIMENTO','Solicitações','Pedidos de serviço enviados pelos clientes pelo App Cliente de agendamento.','Solicitações')+`<div class="pg-bar"><div class="s"><span>⌕</span><input id="sl_q" placeholder="Buscar por cliente, telefone ou serviço" oninput="document.getElementById('sl_area').innerHTML=PX.solList()"></div></div><div id="sl_area">${PX.solList()}</div>`;
 const _spS=special;special=p=>p==='Solicitações'?PX.solPage():_spS(p);
 
