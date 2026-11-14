@@ -104,6 +104,62 @@ main{padding:22px 18px 28px;animation:in .25s ease}@keyframes in{from{opacity:0;
 .pf-tag{font-size:11px;font-weight:700;background:#eef3fb;color:var(--blue);padding:3px 10px;border-radius:20px}
 .pf-b small{font-size:10.5px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pf-act{display:flex;gap:6px;width:100%;margin-top:2px}.pf-act button{flex:1;background:#eef1f6;border-radius:9px;padding:7px 4px;font-size:12px;font-weight:600;color:var(--blue)}.pf-act button:last-child{color:var(--blue)}
+
+/* ===== Layout fixo · Material Design 3 (top app bar + navigation bar/rail) ===== */
+:root{--r:16px;--md-ease:cubic-bezier(.2,0,0,1);--md-sec:#d9e3f8;--md-nav:#eef1f8;--nav-h:80px;--rail-w:88px}
+body{background:var(--paper)}
+.app{max-width:none;margin:0;box-shadow:none;min-height:100dvh;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+.app>main{width:100%;max-width:960px;margin-inline:auto}
+.app>main:has(.flowbar){max-width:640px}
+.login-wrap{max-width:440px;margin-inline:auto}
+main,.login-wrap,.cover{animation:mdin .3s var(--md-ease)}
+@keyframes mdin{from{opacity:0;transform:translateY(12px)}}
+.crop{animation:mdfade .2s var(--md-ease)}@keyframes mdfade{from{opacity:0}}
+/* Top App Bar */
+.top{min-height:64px;padding:calc(8px + env(safe-area-inset-top,0px)) 8px 8px 16px;background:var(--paper);backdrop-filter:none;border-bottom:0;transition:background .2s var(--md-ease),box-shadow .2s var(--md-ease)}
+.top.scrolled{background:var(--md-nav);box-shadow:0 1px 3px #10275026}
+.top-actions{display:flex;align-items:center;gap:2px}
+.iconbtn{border:0;background:transparent;border-radius:50%;width:48px;height:48px;position:relative;transition:background .15s}
+.iconbtn:hover{background:#0230720f}.iconbtn:active{background:#0230721f}
+.badge{position:absolute;top:7px;right:7px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;border:2px solid var(--paper);line-height:1}
+.iconbtn.prof .avatar{width:34px;height:34px;font-size:12px;overflow:hidden}
+.brand img{width:40px;height:40px}
+/* Navigation Bar */
+.bottom{background:var(--md-nav);border-top:0;box-shadow:0 -1px 0 var(--line);height:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+.bottom button{justify-content:flex-start;padding-top:12px;gap:4px;color:#44526b;font-size:12px}
+.bottom .ind{width:64px;height:32px;border-radius:16px;display:grid;place-items:center;transition:background .25s var(--md-ease),transform .2s var(--md-ease)}
+.bottom button:hover .ind{background:#02307214}.bottom button:active .ind{transform:scale(.94)}
+.bottom button.active{color:var(--blue);font-weight:800}.bottom button.active .ind{background:var(--md-sec)}
+/* Botões e componentes MD3 */
+.primary,.secondary{border-radius:24px;min-height:48px;padding-block:12px}
+.btn-o{border-radius:20px;min-height:40px}
+.card,.service,.pf-card{border-radius:var(--r)}
+.service{transition:border-color .15s,transform .15s var(--md-ease),box-shadow .15s}
+.pwa-hide{display:none}
+body:has(.bottom) #pwa-bn{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+/* Tablet */
+@media(min-width:600px){
+ body{padding:0}
+ .app{min-height:100dvh;border-radius:0;overflow:visible;display:block;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+ .app:has(.cover),.app:not(:has(.bottom)){padding-bottom:0}
+ .bottom,.cta{position:fixed;left:0;right:0;bottom:0;transform:none;width:100%;margin:0;border-radius:0}
+ .cta{display:flex;justify-content:center}.cta .primary{max-width:560px}
+ .grid:has(.service){grid-template-columns:repeat(3,1fr)}
+ .pf-grid{grid-template-columns:repeat(3,1fr)}
+ .times{grid-template-columns:repeat(5,1fr)}
+ .chips{grid-template-columns:repeat(4,1fr)}
+ .top{padding-inline:24px 16px}main{padding-inline:24px}
+ .cover{min-height:100dvh}
+}
+/* Desktop: Navigation Rail lateral */
+@media(min-width:840px){
+ .app:has(.bottom){padding-left:var(--rail-w);padding-bottom:0}
+ .bottom{top:0;bottom:0;right:auto;width:var(--rail-w);height:auto;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-top:env(safe-area-inset-top,0px);box-shadow:1px 0 0 var(--line)}
+ .bottom button{flex:none;padding:0}
+ .grid:has(.service){grid-template-columns:repeat(4,1fr)}
+ .pf-grid{grid-template-columns:repeat(4,1fr)}
+ body:has(.bottom) #pwa-bn{bottom:12px;left:calc(var(--rail-w) + 12px)}
+}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
 <body><div class="app" id="app"></div><div class="toast" id="toast" role="status"></div>
 <script>
@@ -111,6 +167,7 @@ const LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAACAAAAAgACAYAAACyp9MwAA
 const WA_DEFAULT="5584999245817",ADMIN_EMAIL="proservice197@gmail.com"; /* WhatsApp padrão da empresa (55 + DDD + número) e e-mail do administrador que pode alterá-lo no app */
 let WA=(()=>{try{const v=localStorage.getItem("proWA");return /^\d{12,13}$/.test(v||"")?v:WA_DEFAULT}catch(e){return WA_DEFAULT}})();
 const D={gear:"M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z",home:"M3 11l9-8 9 8M5 10v10h14V10",cal:"M4 6h16v14H4zM4 10h16M8 3v4M16 3v4",tool:"M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5l-2.5 2.5-2.4-.6-.6-2.4z",user:"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M4 21c0-4 3.5-6 8-6s8 2 8 6",chair:"M6 11V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6M4 11h16v5H4zM6 16v4M18 16v4",brick:"M3 5h18v14H3zM3 10h18M3 14.5h18M9 5v5M15 10v4.5M9 14.5V19",shield:"M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4",bolt:"M13 2L4 14h7l-1 8 9-12h-7z",drop:"M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z",cam:"M3 8h12v9H3zM15 11l6-3v9l-6-3",roof:"M3 8h18v4a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3zM8 15v5",wifi:"M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01",check:"M5 12l5 5 9-10",chev:"M9 6l6 6-6 6",back:"M15 6l-6 6 6 6",pin:"M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11zM12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4",clock:"M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2",help:"M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01",card:"M3 6h18v12H3zM3 10h18",out:"M9 4H5v16h4M16 8l4 4-4 4M20 12H9",wa:"M4 20l1.5-4.5A8 8 0 1 1 9 18.5z",minus:"M5 12h14",photo:"M4 8h3.5l1.8-2.5h5.4L16.5 8H20v11H4zM12 16.5a3.3 3.3 0 1 0 0-6.6 3.3 3.3 0 0 0 0 6.6z",plus:"M12 5v14M5 12h14",x:"M6 6l12 12M18 6L6 18",info:"M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 8h.01"};
+D.bell="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0";
 const I=(n,s=20)=>`<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true"><path d="${D[n]}"/></svg>`;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const services=[
@@ -148,9 +205,22 @@ function goTab(t){state.tab=t;go({inicio:"home",agenda:"appointments",servicos:"
 function toast(m){let e=document.getElementById("toast");e.textContent=m;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2400)}
 function waLink(t){return "https://wa.me/"+WA+"?text="+encodeURIComponent(t)}
 function support(){WA?window.open(waLink("Olá, preciso de ajuda com a PRO Service."),"_blank","noopener"):toast("Canal de atendimento indisponível no momento")}
-function header(){return `<header class="top"><div class="brand"><img src="${LOGO}" alt=""><div><strong>PRO Service</strong><small>Serviços e Soluções Residenciais</small></div></div><button class="iconbtn" aria-label="Ajuda e suporte" onclick="support()">${I("help")}</button></header>`}
-function nav(){return `<nav class="bottom" aria-label="Principal">${[["inicio","home","Início"],["agenda","cal","Agenda"],["servicos","tool","Serviços"],["fotos","photo","Fotos"],["perfil","user","Perfil"]].map(([id,ic,t])=>`<button class="${state.tab===id?"active":""}" ${state.tab===id?'aria-current="page"':""} onclick="goTab('${id}')">${I(ic,22)}${t}</button>`).join("")}</nav>`}
+function header(){const u=state.user||{},n=notifCount(),av=u.photo?`<img src="${esc(u.photo)}" alt="">`:esc(ini(u.name));
+ return `<header class="top"><div class="brand"><img src="${LOGO}" alt="PRO Service"><div><strong>PRO Service</strong><small>Serviços e Soluções Residenciais</small></div></div><div class="top-actions"><button class="iconbtn" aria-label="Notificações${n?" ("+n+" novas)":""}" onclick="openNotifs()">${I("bell",24)}${n?`<span class="badge">${n}</span>`:""}</button><button class="iconbtn" aria-label="Configurações" onclick="openSettings()">${I("gear",24)}</button><button class="iconbtn prof" aria-label="Perfil" onclick="goTab('perfil')"><span class="avatar">${av}</span></button></div></header>`}
+function nav(){return `<nav class="bottom" aria-label="Principal">${[["inicio","home","Início"],["agenda","cal","Agenda"],["servicos","tool","Serviços"],["fotos","photo","Fotos"],["perfil","user","Perfil"]].map(([id,ic,t])=>`<button class="${state.tab===id?"active":""}" ${state.tab===id?'aria-current="page"':""} onclick="goTab('${id}')"><span class="ind">${I(ic,24)}</span>${t}</button>`).join("")}</nav>`}
 function shell(c){app.innerHTML=header()+`<main>${c}</main>`+nav()}
+function openSettings(){state.tab="perfil";go("settings")}
+/* Notificações: atualizações de status dos pedidos (confirmado/cancelado) */
+const NSEEN="proNotifSeen",nSig=a=>a.id+":"+a.status;
+const notifItems=()=>state.appointments.filter(a=>a.status!=="Aguardando confirmação");
+function notifCount(){const s=load(NSEEN,[]);return notifItems().filter(a=>!s.includes(nSig(a))).length}
+function openNotifs(){const l=notifItems();let o=document.getElementById("notif");if(o)o.remove();
+ o=document.createElement("div");o.id="notif";o.className="crop";o.onclick=e=>{if(e.target===o)closeNotifs()};
+ o.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Notificações" style="text-align:left;max-height:80dvh;overflow:auto"><h3>Notificações</h3>${l.length?l.map(a=>`<button class="menuitem" onclick="closeNotifs();state.open=${a.id};state.tab='agenda';go('detail')"><span class="ico" style="margin:0;color:var(--orange);display:grid">${I(a.icon,18)}</span><div><b>${esc(a.service)}</b><div class="muted">${esc(a.protocol)} • ${esc(fmt(a))} ${esc(a.time)}</div></div><span class="status ${stCls(a.status)}" style="margin-left:auto">${a.status}</span></button>`).join(""):`<div class="empty" style="padding:24px 8px"><b>Nenhuma novidade por aqui</b><p style="margin:0">Avisaremos quando a equipe confirmar ou atualizar seus pedidos.</p></div>`}<button class="secondary" onclick="closeNotifs()">Fechar</button></div>`;
+ document.body.appendChild(o);store(NSEEN,l.map(nSig));document.querySelector(".top .badge")?.remove();o.querySelector(".secondary").focus()}
+function closeNotifs(){document.getElementById("notif")?.remove()}
+addEventListener("keydown",e=>{if(e.key==="Escape")closeNotifs()});
+addEventListener("scroll",()=>document.querySelector(".top")?.classList.toggle("scrolled",scrollY>4),{passive:true});
 function flow(n,back,title,sub,body,label,action,dis){app.innerHTML=`<main><div class="flowbar"><button class="iconbtn" aria-label="Voltar" onclick="${back}">${I("back")}</button><div class="steps" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="${n}">${[1,2,3,4].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</div><span class="stepn">${n} de 4</span></div><h1 class="heading">${title}</h1><p class="sub">${sub}</p>${body}</main><div class="cta"><button class="primary" ${dis?"disabled":""} onclick="${action}">${label}</button></div>`;app.querySelector("main").style.paddingBottom="110px"}
 function welcome(){app.innerHTML=`<div class="login-wrap"><img class="login-logo" src="${LOGO}" alt="PRO Service"><div class="eyebrow">Sua casa em boas mãos</div><h1 class="heading">Serviços residenciais<br>com praticidade.</h1><p class="sub">Encontre profissionais para cuidar da sua casa e agende em poucos passos.</p><button class="primary" onclick="go('login')">Entrar</button><button class="secondary" onclick="go('register')">Criar conta</button><p class="muted" style="margin-top:28px">PRO Service • Atendimento residencial</p></div>`}
 function auth(reg){app.innerHTML=`<main><button class="iconbtn" aria-label="Voltar" onclick="go('welcome')">${I("back")}</button><div style="text-align:center;margin:6px 0 10px"><img src="${LOGO}" alt="" style="width:84px;height:84px;object-fit:contain"><h1 class="heading">${reg?"Criar conta":"Bem-vindo de volta"}</h1><p class="sub">${reg?"Cadastre-se para solicitar seus serviços.":"Acesse sua conta para continuar."}</p></div><form onsubmit="saveUser(event,${reg})" novalidate>${reg?`<div class="field"><label for="name">Nome completo</label><input id="name" autocomplete="name" placeholder="Seu nome"></div><div class="field"><label for="phone">Telefone / WhatsApp</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" oninput="this.value=mask(this.value)"></div>`:""}<div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="email" placeholder="voce@email.com"></div><div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="${reg?"new-password":"current-password"}" placeholder="${reg?"Mínimo de 6 caracteres":"Sua senha"}"></div><p class="err" id="err" role="alert"></p><button class="primary">${reg?"Criar conta e continuar":"Entrar"}</button></form></main>`}
