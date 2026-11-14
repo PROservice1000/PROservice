@@ -108,7 +108,7 @@ main{padding:22px 18px 28px;animation:in .25s ease}@keyframes in{from{opacity:0;
 /* ===== Layout fixo · Material Design 3 (top app bar + navigation bar/rail) ===== */
 :root{--r:16px;--md-ease:cubic-bezier(.2,0,0,1);--md-sec:#d9e3f8;--md-nav:#eef1f8;--nav-h:80px;--rail-w:88px}
 body{background:var(--paper)}
-.app{max-width:none;margin:0;box-shadow:none;min-height:100dvh;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+.app{max-width:440px;margin:0 auto;box-shadow:0 0 40px #001b4220;overflow-x:clip;min-height:100dvh;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
 .app>main{width:100%;max-width:960px;margin-inline:auto}
 .app>main:has(.flowbar){max-width:640px}
 .login-wrap{max-width:440px;margin-inline:auto}
@@ -123,7 +123,7 @@ main,.login-wrap,.cover{animation:mdin .3s var(--md-ease)}
 .iconbtn:hover{background:#0230720f}.iconbtn:active{background:#0230721f}
 .badge{position:absolute;top:7px;right:7px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;border:2px solid var(--paper);line-height:1}
 .iconbtn.prof .avatar{width:34px;height:34px;font-size:12px;overflow:hidden}
-.brand img{width:40px;height:40px}
+.brand img{width:40px;height:40px}.brand,.brand>div{min-width:0}
 /* Navigation Bar */
 .bottom{background:var(--md-nav);border-top:0;box-shadow:0 -1px 0 var(--line);height:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
 .bottom button{justify-content:flex-start;padding-top:12px;gap:4px;color:#44526b;font-size:12px}
@@ -137,22 +137,29 @@ main,.login-wrap,.cover{animation:mdin .3s var(--md-ease)}
 .service{transition:border-color .15s,transform .15s var(--md-ease),box-shadow .15s}
 .pwa-hide{display:none}
 body:has(.bottom) #pwa-bn{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
-/* Tablet */
+html.zf .app,html.zf .cover{min-height:calc(100dvh / var(--z,1))}
+/* Toque em tela larga (ex.: 'Site para computador'): mantém a coluna de celular, tela cheia */
 @media(min-width:600px){
- body{padding:0}
+ body{padding:0;background:#e9edf3}
  .app{min-height:100dvh;border-radius:0;overflow:visible;display:block;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
  .app:has(.cover),.app:not(:has(.bottom)){padding-bottom:0}
- .bottom,.cta{position:fixed;left:0;right:0;bottom:0;transform:none;width:100%;margin:0;border-radius:0}
+ .bottom,.cta{position:fixed;left:50%;right:auto;bottom:0;transform:translateX(-50%);width:min(440px,100%);margin:0;border-radius:0}
+ .cover{min-height:100dvh}
+}
+/* Tablet/desktop com mouse */
+@media(min-width:600px) and (hover:hover) and (pointer:fine){
+ body{background:var(--paper)}
+ .app{max-width:none;box-shadow:none}
+ .bottom,.cta{left:0;right:0;transform:none;width:100%}
  .cta{display:flex;justify-content:center}.cta .primary{max-width:560px}
  .grid:has(.service){grid-template-columns:repeat(3,1fr)}
  .pf-grid{grid-template-columns:repeat(3,1fr)}
  .times{grid-template-columns:repeat(5,1fr)}
  .chips{grid-template-columns:repeat(4,1fr)}
  .top{padding-inline:24px 16px}main{padding-inline:24px}
- .cover{min-height:100dvh}
 }
 /* Desktop: Navigation Rail lateral */
-@media(min-width:840px){
+@media(min-width:840px) and (hover:hover) and (pointer:fine){
  .app:has(.bottom){padding-left:var(--rail-w);padding-bottom:0}
  .bottom{top:0;bottom:0;right:auto;width:var(--rail-w);height:auto;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-top:env(safe-area-inset-top,0px);box-shadow:1px 0 0 var(--line)}
  .bottom button{flex:none;padding:0}
@@ -500,5 +507,14 @@ addEventListener("pageshow",e=>{if(e.persisted){state.user=null;state.page="cove
     };
   }
 })();
+</script>
+<script>
+/* Celular em tela larga (ex.: 'Site para computador' ou app instalado em viewport de ~980px):
+   amplia a coluna de 440px para preencher a tela, ficando no tamanho normal de app. */
+(function(){try{var h=document.documentElement;
+function fit(){h.style.zoom="";h.classList.remove("zf");
+ var w=innerWidth,coarse=matchMedia("(pointer:coarse)").matches;
+ if(coarse&&w>=600&&screen.width<w*0.85){var z=Math.min(w/440,3);h.style.zoom=z;h.style.setProperty("--z",z);h.classList.add("zf")}}
+fit();addEventListener("orientationchange",function(){setTimeout(fit,250)});addEventListener("resize",function(){clearTimeout(fit.t);fit.t=setTimeout(fit,200)})}catch(e){}})();
 </script>
 </body></html>
