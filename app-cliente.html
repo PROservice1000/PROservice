@@ -146,27 +146,6 @@ html.zf .app,html.zf .cover{min-height:calc(100dvh / var(--z,1))}
  .bottom,.cta{position:fixed;left:50%;right:auto;bottom:0;transform:translateX(-50%);width:min(440px,100%);margin:0;border-radius:0}
  .cover{min-height:100dvh}
 }
-/* Tablet/desktop com mouse */
-@media(min-width:600px) and (hover:hover) and (pointer:fine){
- body{background:var(--paper)}
- .app{max-width:none;box-shadow:none}
- .bottom,.cta{left:0;right:0;transform:none;width:100%}
- .cta{display:flex;justify-content:center}.cta .primary{max-width:560px}
- .grid:has(.service){grid-template-columns:repeat(3,1fr)}
- .pf-grid{grid-template-columns:repeat(3,1fr)}
- .times{grid-template-columns:repeat(5,1fr)}
- .chips{grid-template-columns:repeat(4,1fr)}
- .top{padding-inline:24px 16px}main{padding-inline:24px}
-}
-/* Desktop: Navigation Rail lateral */
-@media(min-width:840px) and (hover:hover) and (pointer:fine){
- .app:has(.bottom){padding-left:var(--rail-w);padding-bottom:0}
- .bottom{top:0;bottom:0;right:auto;width:var(--rail-w);height:auto;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-top:env(safe-area-inset-top,0px);box-shadow:1px 0 0 var(--line)}
- .bottom button{flex:none;padding:0}
- .grid:has(.service){grid-template-columns:repeat(4,1fr)}
- .pf-grid{grid-template-columns:repeat(4,1fr)}
- body:has(.bottom) #pwa-bn{bottom:12px;left:calc(var(--rail-w) + 12px)}
-}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
 <body><div class="app" id="app"></div><div class="toast" id="toast" role="status"></div>
 <script>
