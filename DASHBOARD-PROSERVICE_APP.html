@@ -789,7 +789,7 @@ function cfgDel(i){if(!confirm('Remover esta etapa? Os orçamentos dela voltam p
 function cfgAdd(){let n=document.getElementById('nn').value;if(!nameOk(n,-1))return;FE.orc.push([n.trim(),document.getElementById('nc').value]);feSave();cfgPaint()}
 </script>
 <style>
-.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}.ft{background:#fff;border:1px solid #dce4ed;border-radius:10px;overflow:hidden;font-size:10px}.ft img{width:100%;height:120px;object-fit:cover;display:block;cursor:pointer}.ft>div{padding:8px}.ft b{display:block;font-size:11px;margin-bottom:3px}.ft small{color:#8291a8;display:block}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}.ft{background:#fff;border:1px solid #dce4ed;border-radius:10px;overflow:hidden;font-size:10px}.ft img{width:100%;height:120px;object-fit:cover;display:block;cursor:pointer}.ft>div{padding:8px}.ft b{display:block;font-size:11px;margin-bottom:3px}.ft small{color:#8291a8;display:block}.ft .os{display:inline-block;background:#e6effb;color:#023072;border-radius:5px;padding:2px 7px;font-weight:700;font-size:10px;margin:0 0 4px}.ft .os.no{background:#f1f3f6;color:#8291a8;font-weight:500}.fv-i{text-align:left;margin-top:10px;border:1px solid #dce4ed;border-radius:8px;padding:10px 12px;font-size:12px}.fv-i div{display:flex;justify-content:space-between;gap:12px;padding:3px 0;border-bottom:1px solid #eef2f7}.fv-i div:last-child{border:0}.fv-i span{color:#8291a8}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:900px){.two{grid-template-columns:1fr}}
 </style>
 <script>
@@ -895,12 +895,17 @@ PX.solConv=i=>{let s=data['Solicitações'][i];if(!s)return;
 let fc='Todas';const FCAT=['Antes','Durante','Depois','Outros'],fotos=()=>LS('proFotos',[]);
 const fD=x=>{let d=new Date(x);if(isNaN(d))return '';let p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
 let rf=[],rfAt=0;
-const fAll=()=>rf.map(r=>({id:r.id,src:r.url,legenda:r.titulo||r.servico||'Foto do cliente',cat:FCAT.includes(r.categoria)?r.categoria:'Outros',cli:r.cliente||'',serv:r.servico||'',data:fD(r.criado_em),remote:1})).concat(fotos().map((f,i)=>({...f,i,local:1})));
+const osOf=r=>{try{const S=data['Solicitações']||[],O=data['Ordens de Serviço']||[],pr=String(r.protocolo||'');
+ if(/^OS\s*\d/i.test(pr))return pr;
+ let sol=S.find(x=>(r.solicitacao_id&&String(x.SbId)===String(r.solicitacao_id))||(pr&&x.Protocolo&&String(x.Protocolo)===pr));
+ if(sol&&sol.OSNum)return sol.OSNum;
+ if(pr){let o=O.find(x=>String(x['Descrição do serviço']||'').includes(pr));if(o&&o['Número da OS'])return o['Número da OS']}}catch(e){}return ''};
+const fAll=()=>rf.map(r=>({osn:osOf(r),id:r.id,src:r.url,legenda:r.titulo||r.servico||'Foto do cliente',cat:FCAT.includes(r.categoria)?r.categoria:'Outros',cli:r.cliente||'',serv:r.servico||'',os:r.protocolo||'',solId:r.solicitacao_id||'',data:fD(r.criado_em),remote:1})).concat(fotos().map((f,i)=>({...f,i,local:1})));
 PX.fotoLoad=async force=>{const c=window.__sb;if(!c||!navigator.onLine)return;if(!force&&Date.now()-rfAt<8000)return;rfAt=Date.now();
  try{const r=await c.from('fotos').select('*').order('criado_em',{ascending:false}).limit(300);if(r.error)throw r.error;rf=r.data||[];PX.fotoRef()}catch(e){console.warn('Fotos do app não carregadas',e)}};
 setInterval(()=>{if(document.getElementById('fbody')&&document.visibilityState==='visible')PX.fotoLoad(true)},15000);
-function fotosBody(){let q=V('fq').toLowerCase(),l=fAll().map((f,k)=>({...f,k})).filter(f=>(fc==='Todas'||f.cat===fc)&&JSON.stringify([f.legenda,f.cli,f.serv,f.cat]).toLowerCase().includes(q));
- return l.length?`<div class="fg">${l.map(f=>`<div class="ft"><img src="${E(f.src)}" alt="" loading="lazy" onclick="PX.fotoView(${f.k})"><div><b>${E(f.legenda||'Foto')}</b><span class="tag">${f.cat}</span>${f.remote?'<span class="tag" style="margin-left:4px">App</span>':''}<small>${E(f.cli||'—')}${f.serv?' · '+E(f.serv):''} · ${br(f.data)}</small><div class="actions" style="padding-top:6px"><button class="smallbtn" onclick="PX.fotoDl(${f.k})">Baixar</button><button class="smallbtn" onclick="PX.fotoDel(${f.k})">Excluir</button></div></div></div>`).join('')}</div>`:emptyCard(IC.Fotos,'Nenhuma foto encontrada','Adicione fotos do antes, durante e depois dos serviços.')}
+function fotosBody(){let q=V('fq').toLowerCase(),l=fAll().map((f,k)=>({...f,k})).filter(f=>(fc==='Todas'||f.cat===fc)&&JSON.stringify([f.legenda,f.cli,f.serv,f.cat,f.osn,f.os]).toLowerCase().includes(q));
+ return l.length?`<div class="fg">${l.map(f=>`<div class="ft"><img src="${E(f.src)}" alt="" loading="lazy" onclick="PX.fotoView(${f.k})"><div>${f.remote?`<b>${E(f.cli||'Cliente não identificado')}</b><span class="os${f.osn?'':' no'}">${f.osn?E(f.osn):(f.os?'Pedido '+E(f.os):'Sem OS vinculada')}</span>${f.serv?`<small>${E(f.serv)}</small>`:''}<span class="tag">${f.cat}</span><span class="tag" style="margin-left:4px">App</span><small>${br(f.data)}</small>`:`<b>${E(f.legenda||'Foto')}</b><span class="tag">${f.cat}</span><small>${E(f.cli||'—')} · ${br(f.data)}</small>`}<div class="actions" style="padding-top:6px"><button class="smallbtn" onclick="PX.fotoDl(${f.k})">Baixar</button><button class="smallbtn" onclick="PX.fotoDel(${f.k})">Excluir</button></div></div></div>`).join('')}</div>`:emptyCard(IC.Fotos,'Nenhuma foto encontrada','Adicione fotos do antes, durante e depois dos serviços.')}
 PX.fotosPage=()=>(PX.fotoLoad(),hd('OPERAÇÃO','Fotos','Registre o antes e depois dos serviços e organize por cliente e categoria.','Fotos')+
 `<div class="fc"><div class="fb"><div class="rw" style="grid-template-columns:1fr 1fr 1fr"><div>${lb('Categoria')}<select class="fi" id="fcat">${FCAT.map(c=>`<option>${c}</option>`).join('')}</select></div><div>${lb('Cliente / OS',1)}<input class="fi" id="fcli" list="fdl" placeholder="Nome do cliente ou nº da OS">${cliDl('fdl')}</div><div>${lb('Imagens')}<label class="pg-btn" style="display:inline-block;cursor:pointer;padding:10px 14px">＋ Adicionar fotos<input type="file" accept="image/*" multiple hidden onchange="PX.fotoAdd(this)"></label></div></div></div></div><div class="pg-bar"><div class="s"><span>⌕</span><input id="fq" placeholder="Buscar por legenda ou cliente..." oninput="PX.fotoRef()"></div>${['Todas',...FCAT].map(c=>`<button class="pg-tab ${c===fc?'on':''}" style="margin:0" onclick="PX.fotoFil('${c}')">${c}</button>`).join('')}</div><div id="fbody">${fotosBody()}</div>`);
 PX.fotoRef=()=>{let e=document.getElementById('fbody');if(e)e.innerHTML=fotosBody()};PX.fotoFil=c=>{fc=c;render()};
@@ -908,14 +913,27 @@ async function fotoUp(src,legenda,cat,cli){const c=window.__sb;if(!c)throw new E
  const id='dsh'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),blob=await (await fetch(src)).blob();
  let r=await c.storage.from('fotos-servico').upload(id+'.jpg',blob,{contentType:'image/jpeg',upsert:false});if(r.error)throw r.error;
  const url=c.storage.from('fotos-servico').getPublicUrl(id+'.jpg').data.publicUrl;
- r=await c.from('fotos').insert({id,url,categoria:cat,solicitacao_id:null,protocolo:cli,cliente:cli,email:'',servico:'',titulo:legenda,criado_em:new Date().toISOString()});if(r.error)throw r.error}
+ const orec=(data['Ordens de Serviço']||[]).find(x=>String(x['Número da OS']||'').toLowerCase()===cli.toLowerCase());
+ r=await c.from('fotos').insert({id,url,categoria:cat,solicitacao_id:null,protocolo:(orec||/^PRS-/i.test(cli))?cli:'',cliente:orec?(orec.Cliente||cli):cli,email:'',servico:'',titulo:legenda,criado_em:new Date().toISOString()});if(r.error)throw r.error}
 PX.fotoAdd=async inp=>{let l=fotos(),cat=V('fcat'),cli=V('fcli').trim(),n=0,nl=0;
  for(const f of [...inp.files]){try{let src=await shrink(f,1000,.72),legenda=f.name.replace(/\.[^.]+$/,''),sent=false;
    if(window.__sb&&navigator.onLine){try{await fotoUp(src,legenda,cat,cli);sent=true}catch(e){console.warn('Upload da foto falhou; salva só neste navegador',e)}}
    if(!sent){l.push({src,legenda,cat,cli,data:td()});nl++}n++}catch(e){}}
  inp.value='';if(nl&&!LW('proFotos',l))return;
  if(n){toast(n+' foto(s) adicionada(s)'+(nl?' ('+nl+' só neste navegador, sem conexão com o servidor)':'.'));PX.fotoLoad(true);render()}};
-PX.fotoView=k=>{let f=fAll()[k];if(f)agOpen(`${agHead(E(f.legenda||'Foto'))}<div style="padding:12px;text-align:center"><img src="${E(f.src)}" style="max-width:100%;max-height:70vh;border-radius:8px"><p class="ht">${f.cat} · ${E(f.cli||'—')} · ${br(f.data)}</p></div>`)};
+PX.fotoView=async k=>{let f=fAll()[k];if(!f)return;
+ let img=`<img src="${E(f.src)}" style="max-width:100%;max-height:55vh;border-radius:8px">`,top=`${agHead(E(f.remote?(f.cli||'Foto do cliente'):(f.legenda||'Foto')))}<div style="padding:12px;text-align:center">${img}<p class="ht">${f.cat} · ${br(f.data)}</p>`;
+ if(!f.remote)return agOpen(top+'</div>');
+ agOpen(top+'<div class="fv-i" id="fvinfo">Carregando dados da solicitação...</div></div>');
+ let box=()=>document.getElementById('fvinfo'),row=(a,b)=>b?`<div><span>${a}</span><b>${E(b)}</b></div>`:'';
+ try{let c=window.__sb,q=c.from('solicitacoes').select('*');
+  if(f.solId)q=q.eq('id',f.solId);else if(f.os&&!/^OS\s*\d/i.test(f.os))q=q.eq('protocolo',f.os);else{if(box())box().innerHTML=f.osn?row('Nº da OS',f.osn)+`<div style="justify-content:flex-end;padding-top:8px"><button class="smallbtn" onclick="PX.fotoOS(${k})">Ver ordem de serviço</button></div>`:'Esta foto não está vinculada a nenhuma solicitação (foi enviada sem informar a OS).';return}
+  let r=await q.limit(1);if(r.error)throw r.error;let x=r.data&&r.data[0];
+  if(!x){if(box())box().innerHTML='Solicitação não encontrada no sistema.';return}
+  if(box())box().innerHTML=row('Cliente',x.cliente)+row('Telefone',x.zap)+row('Nº da OS',f.osn)+row('Protocolo do pedido',x.protocolo)+row('Serviço',x.servico)+row('Data e hora',(x.data?br(x.data):'')+(x.hora?' · '+x.hora:''))+row('Endereço',x.endereco)+row('Profissional',x.profissional)+row('Status',x.status)+`<div style="justify-content:flex-end;padding-top:8px">${f.osn?`<button class="smallbtn" style="margin-right:6px" onclick="PX.fotoOS(${k})">Ver ordem de serviço</button>`:''}<button class="smallbtn" onclick="PX.fotoSol(${k})">Ver solicitação</button></div>`}
+ catch(e){console.warn(e);if(box())box().innerHTML='Não foi possível carregar a solicitação agora.'}};
+PX.fotoOS=k=>{let f=fAll()[k];if(!f)return;agClose();go('Ordens de Serviço');setTimeout(()=>{let q=document.getElementById('filter');if(q){q.value=f.osn||'';q.dispatchEvent(new Event('input',{bubbles:true}))}},80)};
+PX.fotoSol=k=>{let f=fAll()[k];if(!f)return;agClose();go('Solicitações');setTimeout(()=>{let q=document.getElementById('sl_q');if(q){q.value=f.cli||f.os||'';q.dispatchEvent(new Event('input',{bubbles:true}))}},80)};
 PX.fotoDl=k=>{let f=fAll()[k];if(!f)return;
  if(f.local)return dl((f.legenda||'foto')+'.jpg','image/jpeg',f.src);
  fetch(f.src).then(r=>r.blob()).then(b=>{let u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=(f.legenda||'foto').replace(/[^\w\-]+/g,'_')+'.jpg';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}).catch(()=>toast('Não foi possível baixar a foto.'))};
