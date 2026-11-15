@@ -300,10 +300,30 @@ function setPhoto(inp){const f=inp.files[0];inp.value="";if(!f)return;if(!f.type
 const PH_MAX=6,PH_APPT=12,PH_CATS=["Antes","Durante","Depois","Outros"];
 const photos=()=>{const l=load("proPhotos",[]);return Array.isArray(l)?l:[]};
 function savePhotos(l){try{localStorage.setItem("proPhotos",JSON.stringify(l));return true}catch(e){return false}}
+/* ===== Envio real das fotos ao Supabase (Storage + tabela "fotos") =====
+   A foto continua salva no aparelho (cópia local) e é enviada em segundo plano.
+   p.synced=true só depois que o servidor confirmou. */
+const PH_BUCKET="fotos-servico";let _sp=null;
+function syncPhotos(){_sp=(_sp||Promise.resolve()).then(runSync,runSync);return _sp}
+async function runSync(){const c=sbc();if(!c||!navigator.onLine)return false;
+  const pend=photos().filter(p=>!p.synced&&p.src);if(!pend.length)return true;
+  const done=[];let allOk=true;
+  for(const p of pend){try{
+    const blob=await (await fetch(p.src)).blob(),path=p.id+".jpg";
+    let r=await c.storage.from(PH_BUCKET).upload(path,blob,{contentType:"image/jpeg",upsert:false});
+    if(r.error&&!/exist|duplicate|409/i.test((r.error.message||"")+" "+(r.error.statusCode||"")))throw r.error;
+    const url=c.storage.from(PH_BUCKET).getPublicUrl(path).data.publicUrl;
+    r=await c.from("fotos").insert({id:p.id,url,categoria:p.category||"Outros",solicitacao_id:p.appt?Number(p.appt).toString(36):null,protocolo:p.os||"",cliente:p.client||"",email:p.email||"",servico:p.service||"",titulo:p.title||"",criado_em:p.date||new Date().toISOString()});
+    if(r.error&&String(r.error.code)!=="23505")throw r.error;
+    done.push(p.id)}catch(e){allOk=false;console.warn("Envio da foto falhou",e)}}
+  if(done.length){const l=photos();l.forEach(p=>{if(done.includes(p.id))p.synced=true});savePhotos(l)}
+  return allOk}
+function confirmSend(n){toast("Enviando...");syncPhotos().then(ok=>toast(ok?(n>1?"Fotos enviadas":"Foto enviada"):"Foto salva no aparelho, mas ainda não chegou à equipe. Vamos tentar de novo."))}
+window.addEventListener("online",syncPhotos);window.addEventListener("load",()=>setTimeout(syncPhotos,2000));setInterval(syncPhotos,30000);
 function readImg(f){return new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const im=new Image();im.onerror=no;im.onload=()=>{const k=Math.min(1,1280/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",.72))};im.src=r.result};r.readAsDataURL(f)})}
 function addPhotos(a,srcs,cat){const l=photos(),u=state.user||{},now=new Date().toISOString();
   srcs.forEach((src,i)=>l.unshift({id:"ph"+Date.now().toString(36)+i+Math.random().toString(36).slice(2,5),appt:a.id,os:a.protocol,client:u.name||"Cliente",email:u.email||"",service:a.service,title:a.service+" • "+a.protocol,category:cat,date:now,src,origin:"cliente"}));
-  return savePhotos(l)}
+  const ok=savePhotos(l);if(ok)setTimeout(syncPhotos,300);return ok}
 async function pickPhotos(inp,id){const fs=[...inp.files].filter(f=>f.type.startsWith("image/"));inp.value="";if(!fs.length)return toast("Selecione um arquivo de imagem");
   const a=id?state.appointments.find(x=>x.id===id):null;
   const room=a?PH_APPT-photos().filter(p=>p.appt===a.id).length:PH_MAX-state.d.photos.length;
@@ -312,9 +332,9 @@ async function pickPhotos(inp,id){const fs=[...inp.files].filter(f=>f.type.start
   const out=[];for(const f of fs.slice(0,room)){try{out.push(await readImg(f))}catch(e){}}
   if(!out.length)return toast("Não foi possível ler a imagem");
   if(a){if(!addPhotos(a,out,state.phCat||"Antes"))return toast("Sem espaço para salvar as fotos. Remova alguma e tente de novo.");
-    a.photoCount=photos().filter(p=>p.appt===a.id).length;store("proAppointments",state.appointments);toast(out.length>1?"Fotos enviadas":"Foto enviada")}
+    a.photoCount=photos().filter(p=>p.appt===a.id).length;store("proAppointments",state.appointments)}
   else state.d.photos.push(...out);
-  render()}
+  render();if(a)confirmSend(out.length)}
 function removePhoto(id){const l=photos().filter(p=>p.id!==id);savePhotos(l);const a=state.appointments.find(x=>x.id===state.open);if(a){a.photoCount=l.filter(p=>p.appt===a.id).length;store("proAppointments",state.appointments)}toast("Foto removida");render()}
 function draftPhotos(){const l=state.d.photos||[];
   return `<div class="card"><div class="row"><b>Fotos do local</b><span class="muted">${l.length}/${PH_MAX}</span></div><p class="muted" style="margin:4px 0 0">Opcional. Envie fotos do que precisa ser feito para ajudar a equipe no orçamento.</p>${l.length?`<div class="ph-grid">${l.map((s,i)=>`<div class="ph"><img src="${s}" alt="Foto ${i+1}"><button class="x" aria-label="Remover foto ${i+1}" onclick="state.d.photos.splice(${i},1);render()">${I("x",14)}</button></div>`).join("")}</div>`:""}${l.length<PH_MAX?`<button class="secondary" onclick="document.getElementById('phd').click()">${I("photo",18)}${l.length?"Adicionar mais fotos":"Adicionar fotos"}</button><input id="phd" type="file" accept="image/*" multiple hidden onchange="pickPhotos(this)">`:""}</div>`}
@@ -336,7 +356,7 @@ async function pickFotos(inp){const fs=[...inp.files].filter(f=>f.type.startsWit
   out.forEach((src,i)=>l.unshift({id:"ph"+Date.now().toString(36)+i+Math.random().toString(36).slice(2,5),appt:ap?ap.id:null,os,client:u.name||"Cliente",email:u.email||"",service:ap?ap.service:"",title:(ap?ap.service:"Foto do serviço")+"-"+(n+i+1),category:pf.cat,date:now,src,origin:"cliente"}));
   if(!savePhotos(l))return toast("Sem espaço para salvar as fotos. Exclua alguma e tente de novo.");
   if(ap){ap.photoCount=l.filter(p=>p.appt===ap.id).length;store("proAppointments",state.appointments)}
-  toast(out.length>1?"Fotos enviadas":"Foto enviada");fotoGrid()}
+  fotoGrid();confirmSend(out.length)}
 function dlFoto(id){const p=photos().find(x=>x.id===id);if(!p)return;const a=document.createElement("a");a.href=p.src;a.download=(p.title||"foto").replace(/[^\w\-]+/g,"_")+".jpg";document.body.appendChild(a);a.click();a.remove()}
 function delFoto(id){if(!confirm("Excluir esta foto?"))return;const l=photos().filter(p=>p.id!==id);savePhotos(l);state.appointments.forEach(a=>{if(a.photoCount!=null)a.photoCount=l.filter(p=>p.appt===a.id).length});store("proAppointments",state.appointments);toast("Foto excluída");fotoGrid()}
 function logout(){try{localStorage.removeItem("proUser");sessionStorage.removeItem("proUser")}catch(e){}state.user=null;go("welcome")}
