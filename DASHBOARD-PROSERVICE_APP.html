@@ -261,7 +261,7 @@ async function init(){
  if(typeof supabase==='undefined'){
   if(aok()&&!navigator.onLine&&ls('servillyData')!=null){start();status('local');return}
   G('pro-chk').innerHTML='<p>Não foi possível carregar o sistema de login. Verifique a internet (ou bloqueador de anúncios) e tente de novo.</p><button class="pxbt" onclick="location.reload()">Tentar de novo</button>';return}
- sb=supabase.createClient(URL_,KEY);
+ sb=supabase.createClient(URL_,KEY);window.__sb=sb;
  var s=null;try{s=(await sb.auth.getSession()).data.session}catch(e){}
  if(!s||!aok()){
   if(aok()&&!navigator.onLine&&ls('servillyData')!=null){start();status('off');return}
@@ -893,17 +893,38 @@ PX.solConv=i=>{let s=data['Solicitações'][i];if(!s)return;
  s.Status='Convertida';save();toast('Orçamento criado a partir da solicitação.');go('Orçamentos')};
 /* ===== Fotos ===== */
 let fc='Todas';const FCAT=['Antes','Durante','Depois','Outros'],fotos=()=>LS('proFotos',[]);
-function fotosBody(){let q=V('fq').toLowerCase(),l=fotos().map((f,i)=>({...f,i})).filter(f=>(fc==='Todas'||f.cat===fc)&&JSON.stringify([f.legenda,f.cli,f.cat]).toLowerCase().includes(q));
- return l.length?`<div class="fg">${l.map(f=>`<div class="ft"><img src="${f.src}" alt="" onclick="PX.fotoView(${f.i})"><div><b>${E(f.legenda||'Foto')}</b><span class="tag">${f.cat}</span><small>${E(f.cli||'—')} · ${br(f.data)}</small><div class="actions" style="padding-top:6px"><button class="smallbtn" onclick="PX.fotoDl(${f.i})">Baixar</button><button class="smallbtn" onclick="PX.fotoDel(${f.i})">Excluir</button></div></div></div>`).join('')}</div>`:emptyCard(IC.Fotos,'Nenhuma foto encontrada','Adicione fotos do antes, durante e depois dos serviços.')}
-PX.fotosPage=()=>hd('ATENDIMENTO','Fotos','Registre o antes e depois dos serviços e organize por cliente e categoria.','Fotos')+
-`<div class="fc"><div class="fb"><div class="rw" style="grid-template-columns:1fr 1fr 1fr"><div>${lb('Categoria')}<select class="fi" id="fcat">${FCAT.map(c=>`<option>${c}</option>`).join('')}</select></div><div>${lb('Cliente / OS',1)}<input class="fi" id="fcli" list="fdl" placeholder="Nome do cliente ou nº da OS">${cliDl('fdl')}</div><div>${lb('Imagens')}<label class="pg-btn" style="display:inline-block;cursor:pointer;padding:10px 14px">＋ Adicionar fotos<input type="file" accept="image/*" multiple hidden onchange="PX.fotoAdd(this)"></label></div></div></div></div><div class="pg-bar"><div class="s"><span>⌕</span><input id="fq" placeholder="Buscar por legenda ou cliente..." oninput="PX.fotoRef()"></div>${['Todas',...FCAT].map(c=>`<button class="pg-tab ${c===fc?'on':''}" style="margin:0" onclick="PX.fotoFil('${c}')">${c}</button>`).join('')}</div><div id="fbody">${fotosBody()}</div>`;
+const fD=x=>{let d=new Date(x);if(isNaN(d))return '';let p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
+let rf=[],rfAt=0;
+const fAll=()=>rf.map(r=>({id:r.id,src:r.url,legenda:r.titulo||r.servico||'Foto do cliente',cat:FCAT.includes(r.categoria)?r.categoria:'Outros',cli:r.cliente||'',serv:r.servico||'',data:fD(r.criado_em),remote:1})).concat(fotos().map((f,i)=>({...f,i,local:1})));
+PX.fotoLoad=async force=>{const c=window.__sb;if(!c||!navigator.onLine)return;if(!force&&Date.now()-rfAt<8000)return;rfAt=Date.now();
+ try{const r=await c.from('fotos').select('*').order('criado_em',{ascending:false}).limit(300);if(r.error)throw r.error;rf=r.data||[];PX.fotoRef()}catch(e){console.warn('Fotos do app não carregadas',e)}};
+setInterval(()=>{if(document.getElementById('fbody')&&document.visibilityState==='visible')PX.fotoLoad(true)},15000);
+function fotosBody(){let q=V('fq').toLowerCase(),l=fAll().map((f,k)=>({...f,k})).filter(f=>(fc==='Todas'||f.cat===fc)&&JSON.stringify([f.legenda,f.cli,f.serv,f.cat]).toLowerCase().includes(q));
+ return l.length?`<div class="fg">${l.map(f=>`<div class="ft"><img src="${E(f.src)}" alt="" loading="lazy" onclick="PX.fotoView(${f.k})"><div><b>${E(f.legenda||'Foto')}</b><span class="tag">${f.cat}</span>${f.remote?'<span class="tag" style="margin-left:4px">App</span>':''}<small>${E(f.cli||'—')}${f.serv?' · '+E(f.serv):''} · ${br(f.data)}</small><div class="actions" style="padding-top:6px"><button class="smallbtn" onclick="PX.fotoDl(${f.k})">Baixar</button><button class="smallbtn" onclick="PX.fotoDel(${f.k})">Excluir</button></div></div></div>`).join('')}</div>`:emptyCard(IC.Fotos,'Nenhuma foto encontrada','Adicione fotos do antes, durante e depois dos serviços.')}
+PX.fotosPage=()=>(PX.fotoLoad(),hd('ATENDIMENTO','Fotos','Registre o antes e depois dos serviços e organize por cliente e categoria.','Fotos')+
+`<div class="fc"><div class="fb"><div class="rw" style="grid-template-columns:1fr 1fr 1fr"><div>${lb('Categoria')}<select class="fi" id="fcat">${FCAT.map(c=>`<option>${c}</option>`).join('')}</select></div><div>${lb('Cliente / OS',1)}<input class="fi" id="fcli" list="fdl" placeholder="Nome do cliente ou nº da OS">${cliDl('fdl')}</div><div>${lb('Imagens')}<label class="pg-btn" style="display:inline-block;cursor:pointer;padding:10px 14px">＋ Adicionar fotos<input type="file" accept="image/*" multiple hidden onchange="PX.fotoAdd(this)"></label></div></div></div></div><div class="pg-bar"><div class="s"><span>⌕</span><input id="fq" placeholder="Buscar por legenda ou cliente..." oninput="PX.fotoRef()"></div>${['Todas',...FCAT].map(c=>`<button class="pg-tab ${c===fc?'on':''}" style="margin:0" onclick="PX.fotoFil('${c}')">${c}</button>`).join('')}</div><div id="fbody">${fotosBody()}</div>`);
 PX.fotoRef=()=>{let e=document.getElementById('fbody');if(e)e.innerHTML=fotosBody()};PX.fotoFil=c=>{fc=c;render()};
-PX.fotoAdd=async inp=>{let l=fotos(),cat=V('fcat'),cli=V('fcli').trim(),n=0;
- for(const f of [...inp.files]){try{l.push({src:await shrink(f,1000,.72),legenda:f.name.replace(/\.[^.]+$/,''),cat,cli,data:td()});n++}catch(e){}}
- inp.value='';if(n&&LW('proFotos',l)){toast(n+' foto(s) adicionada(s).');render()}};
-PX.fotoView=i=>{let f=fotos()[i];if(f)agOpen(`${agHead(E(f.legenda||'Foto'))}<div style="padding:12px;text-align:center"><img src="${f.src}" style="max-width:100%;max-height:70vh;border-radius:8px"><p class="ht">${f.cat} · ${E(f.cli||'—')} · ${br(f.data)}</p></div>`)};
-PX.fotoDl=i=>{let f=fotos()[i];if(f)dl((f.legenda||'foto')+'.jpg','image/jpeg',f.src)};
-PX.fotoDel=i=>{if(!confirm('Excluir esta foto?'))return;let l=fotos();l.splice(i,1);LW('proFotos',l);render()};
+async function fotoUp(src,legenda,cat,cli){const c=window.__sb;if(!c)throw new Error('sem-conexao');
+ const id='dsh'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),blob=await (await fetch(src)).blob();
+ let r=await c.storage.from('fotos-servico').upload(id+'.jpg',blob,{contentType:'image/jpeg',upsert:false});if(r.error)throw r.error;
+ const url=c.storage.from('fotos-servico').getPublicUrl(id+'.jpg').data.publicUrl;
+ r=await c.from('fotos').insert({id,url,categoria:cat,solicitacao_id:null,protocolo:cli,cliente:cli,email:'',servico:'',titulo:legenda,criado_em:new Date().toISOString()});if(r.error)throw r.error}
+PX.fotoAdd=async inp=>{let l=fotos(),cat=V('fcat'),cli=V('fcli').trim(),n=0,nl=0;
+ for(const f of [...inp.files]){try{let src=await shrink(f,1000,.72),legenda=f.name.replace(/\.[^.]+$/,''),sent=false;
+   if(window.__sb&&navigator.onLine){try{await fotoUp(src,legenda,cat,cli);sent=true}catch(e){console.warn('Upload da foto falhou; salva só neste navegador',e)}}
+   if(!sent){l.push({src,legenda,cat,cli,data:td()});nl++}n++}catch(e){}}
+ inp.value='';if(nl&&!LW('proFotos',l))return;
+ if(n){toast(n+' foto(s) adicionada(s)'+(nl?' ('+nl+' só neste navegador, sem conexão com o servidor)':'.'));PX.fotoLoad(true);render()}};
+PX.fotoView=k=>{let f=fAll()[k];if(f)agOpen(`${agHead(E(f.legenda||'Foto'))}<div style="padding:12px;text-align:center"><img src="${E(f.src)}" style="max-width:100%;max-height:70vh;border-radius:8px"><p class="ht">${f.cat} · ${E(f.cli||'—')} · ${br(f.data)}</p></div>`)};
+PX.fotoDl=k=>{let f=fAll()[k];if(!f)return;
+ if(f.local)return dl((f.legenda||'foto')+'.jpg','image/jpeg',f.src);
+ fetch(f.src).then(r=>r.blob()).then(b=>{let u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=(f.legenda||'foto').replace(/[^\w\-]+/g,'_')+'.jpg';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}).catch(()=>toast('Não foi possível baixar a foto.'))};
+PX.fotoDel=async k=>{let f=fAll()[k];if(!f||!confirm('Excluir esta foto?'))return;
+ if(f.local){let l=fotos();l.splice(f.i,1);LW('proFotos',l);render();return}
+ try{const c=window.__sb,r=await c.from('fotos').delete().eq('id',f.id).select('id');
+  if(r.error)throw r.error;if(!r.data||!r.data.length){toast('Sem permissão para excluir. Rode o SQL de exclusão no Supabase.');return}
+  try{await c.storage.from('fotos-servico').remove([f.id+'.jpg'])}catch(e){}
+  rf=rf.filter(x=>x.id!==f.id);toast('Foto excluída.');render()}catch(e){console.warn(e);toast('Não foi possível excluir a foto.')}};
 /* ===== Emitir Recibo ===== */
 const FP=['Pix','Dinheiro','Cartão de crédito','Cartão de débito','Boleto','Transferência'];
 const EXT=v=>{v=Math.round(v*100);let r=Math.floor(v/100),c=v%100;
