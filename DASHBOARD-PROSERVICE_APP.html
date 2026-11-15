@@ -829,7 +829,10 @@ PX.solOS=r=>{if(r.OSNum)return false;data['Ordens de Serviço']=data['Ordens de 
  o={'Número da OS':`OS ${String(n).padStart(3,'0')}/${y}`,Cliente:r.Cliente||'','Orçamento relacionado':'','Data de abertura':agendaFmt(new Date()),'Data prevista':r.Data||'','Profissional responsável':'','Descrição do serviço':ds,'Valor (R$)':'',Status:'Aberta',Origem:'Solicitação do App'};
  L.push(o);r.OSNum=o['Número da OS'];return true};
 PX.solOSCancel=r=>{if(!r.OSNum)return;let o=(data['Ordens de Serviço']||[]).find(x=>x['Número da OS']===r.OSNum);if(o&&!/conclu/i.test(o.Status||''))o.Status='Cancelada'};
-PX.solSync=()=>{let ch=false;(data['Solicitações']||[]).forEach(r=>{if(/confirm/i.test(String(r.Status||''))&&!r.OSNum&&PX.solOS(r))ch=true});if(ch)save();return ch};
+PX.solSync=()=>{let ch=false;
+ /* Reparo único: pedido confirmado cuja OS vinculada não existe (ou é de outro cliente) volta a gerar a OS */
+ try{if(!localStorage.getItem('pxSolOsFix1')){localStorage.setItem('pxSolOsFix1','1');let L=data['Ordens de Serviço']||[];(data['Solicitações']||[]).forEach(r=>{if(/confirm/i.test(String(r.Status||''))&&r.OSNum){let o=L.find(x=>x['Número da OS']===r.OSNum);if(!o||String(o.Cliente||'')!==String(r.Cliente||'')){delete r.OSNum;ch=true}}})}}catch(e){}
+ (data['Solicitações']||[]).forEach(r=>{if(/confirm/i.test(String(r.Status||''))&&!r.OSNum&&PX.solOS(r))ch=true});if(ch)save();return ch};
 PX.solSet=(i,st)=>{let r=(data['Solicitações']||[])[i];if(!r)return;if(st==='Cancelado'&&!confirm('Cancelar esta solicitação? O cliente será avisado no app.'))return;
  r.Status=st;if(st==='Confirmado')PX.solOS(r);else if(st==='Cancelado')PX.solOSCancel(r);save();
  let u=st==='Confirmado'?PX.solWa(r):'';if(u)window.open(u,'_blank');
