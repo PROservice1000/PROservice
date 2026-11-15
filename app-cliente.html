@@ -212,17 +212,49 @@ function welcome(){app.innerHTML=`<div class="login-wrap"><img class="login-logo
 function auth(reg){app.innerHTML=`<main><button class="iconbtn" aria-label="Voltar" onclick="go('welcome')">${I("back")}</button><div style="text-align:center;margin:6px 0 10px"><img src="${LOGO}" alt="" style="width:84px;height:84px;object-fit:contain"><h1 class="heading">${reg?"Criar conta":"Bem-vindo de volta"}</h1><p class="sub">${reg?"Cadastre-se para solicitar seus serviços.":"Acesse sua conta para continuar."}</p></div><form onsubmit="saveUser(event,${reg})" novalidate>${reg?`<div class="field"><label for="name">Nome completo</label><input id="name" autocomplete="name" placeholder="Seu nome"></div><div class="field"><label for="phone">Telefone / WhatsApp</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" oninput="this.value=mask(this.value)"></div>`:""}<div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="email" placeholder="voce@email.com"></div><div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="${reg?"new-password":"current-password"}" placeholder="${reg?"Mínimo de 6 caracteres":"Sua senha"}"></div><p class="err" id="err" role="alert"></p><button class="primary">${reg?"Criar conta e continuar":"Entrar"}</button></form></main>`}
 function mask(v){let d=v.replace(/\D/g,"").slice(0,11);return d.length>6?`(${d.slice(0,2)}) ${d.slice(2,d.length>10?7:6)}-${d.slice(d.length>10?7:6)}`:d.length>2?`(${d.slice(0,2)}) ${d.slice(2)}`:d}
 function pwHash(p){p="pro|"+p;let a=0xdeadbeef,b=0x41c6ce57;for(let i=0;i<p.length;i++){const c=p.charCodeAt(i);a=Math.imul(a^c,2654435761);b=Math.imul(b^c,1597334677)}a=Math.imul(a^(a>>>16),2246822507)^Math.imul(b^(b>>>13),3266489909);b=Math.imul(b^(b>>>16),2246822507)^Math.imul(a^(a>>>13),3266489909);return(4294967296*(2097151&b)+(a>>>0)).toString(36)}
-function saveUser(e,reg){e.preventDefault();const v=id=>(document.getElementById(id)?.value||"").trim(),bad=m=>{document.getElementById("err").textContent=m};
- const email=v("email"),pw=document.getElementById("password").value;
+async function saveUser(e,reg){e.preventDefault();
+ const v=id=>(document.getElementById(id)?.value||"").trim(),bad=m=>{const x=document.getElementById("err");if(x)x.textContent=m},btn=e.target.querySelector("button.primary");
+ const email=v("email"),pw=document.getElementById("password").value,key=email.toLowerCase();
  if(reg&&v("name").split(/\s+/).filter(Boolean).length<2)return bad("Informe seu nome completo.");
  if(reg&&v("phone").replace(/\D/g,"").length<10)return bad("Informe um telefone válido com DDD.");
  if(!/^\S+@\S+\.\S+$/.test(email))return bad("Informe um e-mail válido.");
  if(pw.length<(reg?6:4))return bad(reg?"A senha deve ter ao menos 6 caracteres.":"Informe sua senha.");
- const users=load("proUsers",[]),old=load("proUser",null);if(old&&!users.some(u=>u.email===old.email))users.push(old);
- const key=email.toLowerCase();
- if(reg){const ex=users.find(u=>u.email.toLowerCase()===key);if(ex&&ex.pv)return bad("Este e-mail já está cadastrado. Faça login.");if(ex){Object.assign(ex,{name:v("name"),phone:v("phone"),ph:pwHash(pw),pv:2});state.user=ex}else{state.user={name:v("name"),email,phone:v("phone"),ph:pwHash(pw),pv:2};users.push(state.user)}store("proUsers",users)}
- else{const f=users.find(u=>u.email.toLowerCase()===key);if(!f)return bad("Login ou senha inválidos");if(!f.pv)return bad("Login ou senha inválidos");if(f.ph!==pwHash(pw))return bad("Login ou senha inválidos");state.user=f}
- void 0;goTab("inicio")}
+ bad("");if(btn)btn.disabled=true;
+ try{
+  const users=load("proUsers",[]),old=load("proUser",null);if(old&&!users.some(u=>u.email===old.email))users.push(old);
+  const local=users.find(u=>u.email.toLowerCase()===key),c=sbc();
+  const net=x=>!x||!x.status||/fetch|network|retryable/i.test((x.name||"")+" "+(x.message||""));
+  let user=null,r;
+  if(c&&navigator.onLine){
+   if(reg){
+    r=await c.auth.signUp({email,password:pw,options:{data:{name:v("name"),phone:v("phone")}}});
+    if(r.error)return bad(net(r.error)?"Sem conexão. Tente novamente.":/already|registered|exists/i.test(r.error.message||"")?"Este e-mail já está cadastrado. Faça login.":/password/i.test(r.error.message||"")?"A senha deve ter ao menos 6 caracteres.":r.error.status===429?"Muitas tentativas. Aguarde alguns minutos.":"Não foi possível criar a conta agora. Tente novamente.");
+    if(!r.data.session)return bad("Não foi possível concluir o cadastro agora. Tente novamente.");
+    user=r.data.user;
+   }else{
+    r=await c.auth.signInWithPassword({email,password:pw});
+    if(r.error&&!net(r.error)){
+     if(r.error.status===429)return bad("Muitas tentativas. Aguarde alguns minutos.");
+     if(r.error.code!=="invalid_credentials"&&!/invalid login/i.test(r.error.message||""))return bad("Não foi possível entrar agora. Tente novamente.");
+     /* conta antiga (criada só neste aparelho): cria a conta online com a mesma senha */
+     if(local&&local.pv&&!local.uid&&local.ph===pwHash(pw)){
+      r=await c.auth.signUp({email,password:pw,options:{data:{name:local.name||"",phone:local.phone||""}}});
+      if(r.error&&/password/i.test(r.error.message||""))return bad("Por segurança, a senha agora precisa ter 6 caracteres ou mais. Toque em Criar conta e cadastre-se de novo com uma senha mais longa.");
+      if(r.error||!r.data.session)return bad("Login ou senha inválidos");
+     }else return bad("Login ou senha inválidos");
+    }
+    if(!r.error)user=r.data.user;
+   }
+  }
+  if(!user){
+   if(reg)return bad("Sem conexão. Conecte-se à internet para criar a conta.");
+   if(local&&local.pv&&local.uid&&local.ph===pwHash(pw)){state.user=local;toast("Sem conexão: entrando com os dados do aparelho");goTab("inicio");return}
+   return bad("Sem conexão. Conecte-se à internet para entrar.");
+  }
+  const md=user.user_metadata||{};
+  const rec={...(local||{}),name:reg?v("name"):(local&&local.name)||md.name||"Cliente",phone:reg?v("phone"):(local&&local.phone)||md.phone||"",email:(local&&local.email)||email,ph:pwHash(pw),pv:2,uid:user.id};
+  store("proUsers",[...users.filter(u=>u.email.toLowerCase()!==key),rec]);state.user=rec;goTab("inicio");
+ }finally{if(btn)btn.disabled=false}}
 function serviceCard(s,i){return `<button class="service" onclick="chooseService(${i})"><div class="ico">${I(s[2],22)}</div><b>${s[0]}</b><small>${s[1]}</small></button>`}
 function apptCard(a){return `<button class="card appt" onclick="state.open=${a.id};go('detail')"><div class="row"><div class="row" style="justify-content:flex-start;gap:11px"><div class="ico">${I(a.icon,18)}</div><div><b>${esc(a.service)}</b><div class="muted">${esc(a.pro)}</div></div></div><span class="status ${stCls(a.status)}">${a.status==="Aguardando confirmação"?"Aguardando":a.status}</span></div><div class="row"><span class="muted" style="display:flex;gap:6px;align-items:center">${I("cal",15)}${esc(fmt(a))}</span><b class="price">${esc(a.time)}</b></div></button>`}
 function home(){const nx=state.appointments.filter(active).sort((a,b)=>(a.iso+a.time).localeCompare(b.iso+b.time))[0],n=state.user?.name||"";
@@ -235,31 +267,32 @@ function confirmPage(){const d=state.d,s=services[d.service],a={iso:d.date};
  flow(3,"go('schedule')","Confirmar solicitação","Confira os dados e informe o local do atendimento.",`<div class="card"><div class="summaryline"><span>Serviço</span><b>${s[0]}</b></div><div class="summaryline"><span>Profissional</span><b>${professionals[d.pro][0]}</b></div><div class="summaryline"><span>Data e horário</span><b>${esc(fmt(a))} • ${d.time}</b></div><div class="summaryline"><span>Valor</span><b class="price">Sob orçamento</b></div></div><div class="field"><label for="addr">Endereço / bairro do atendimento</label><input id="addr" autocomplete="street-address" placeholder="Rua, número e bairro" value="${esc(d.address)}" oninput="state.d.address=this.value;document.querySelector('.cta .primary').disabled=this.value.trim().length<5"></div><div class="field"><label for="pay">Forma de pagamento preferida</label><select id="pay" onchange="state.d.payment=this.value">${["No local","Pix","Cartão"].map(o=>`<option ${d.payment===o?"selected":""}>${o}</option>`).join("")}</select></div><div class="field"><label for="note">Detalhes do serviço (opcional)</label><textarea id="note" rows="3" placeholder="Descreva o que precisa ser feito..." oninput="state.d.note=this.value">${esc(d.note)}</textarea></div>${draftPhotos()}<div class="notice">${I("info",18)}<span>Este pedido não é uma contratação automática. A PRO Service entrará em contato para validar endereço, escopo, preço e disponibilidade.</span></div>`,"Enviar solicitação","book()",d.address.trim().length<5)}
 /* ===== Envio da solicitação ao painel (Supabase) com fila offline ===== */
 const SB_URL="https://ftnhcbhgfeymwbjywdmp.supabase.co",SB_KEY="sb_publishable_L0NsRLPB18V1E7jTkWja8Q_NlaTYj6L";
-let _sb=null;const sbc=()=>{try{if(!_sb&&window.supabase)_sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false}})}catch(e){}return _sb};
+let _sb=null;const sbc=()=>{try{if(!_sb&&window.supabase)_sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"pro-cliente-auth"}})}catch(e){}return _sb};
+const sess=async()=>{const c=sbc();if(!c)return null;try{return (await c.auth.getSession()).data.session}catch(e){return null}};
 function rowFor(a,full){const u=a.user||state.user||{},d=a.iso||"";
  const extra=[a.note,a.payment?"Pagamento: "+a.payment:"",a.protocol?"Protocolo: "+a.protocol:""].filter(Boolean);
  const r={id:Number(a.id).toString(36),ts:Number(a.id),cliente:u.name||"Cliente do app",zap:u.phone||"",servico:a.service,data:d,hora:a.time||"",profissional:a.pro||"",status:"pendente"};
  if(full){r.obs=extra.join(" · ");r.endereco=a.address||"";r.protocolo=a.protocol||""}
  else r.obs=["Endereço: "+(a.address||"—")].concat(extra).join(" · ");
  return r}
-async function pushOne(a){const c=sbc();if(!c)throw new Error("sem-sdk");
+async function pushOne(a){const c=sbc();if(!c)throw new Error("sem-sdk");if(!await sess())throw new Error("sem-sessao");
  let r=await c.from("solicitacoes").insert(rowFor(a,true));
  if(r.error&&/column|schema|PGRST204|42703/i.test((r.error.code||"")+" "+(r.error.message||""))) r=await c.from("solicitacoes").insert(rowFor(a,false));
  if(r.error&&String(r.error.code)!=="23505")throw r.error}
 let _flushing=false;
 async function flushOutbox(){if(_flushing||!navigator.onLine)return;_flushing=true;
- try{let q=load("proOutbox",[]);const rest=[];
-  for(const a of q){try{await pushOne(a);const ap=state.appointments.find(x=>x.id===a.id);if(ap)ap.sent=true;}catch(e){console.warn("Envio falhou",e);rest.push(a)}}
+ try{const ss=await sess();if(!ss)return;let q=load("proOutbox",[]);const rest=[];
+  for(const a of q){if(a.uid&&a.uid!==ss.user.id){rest.push(a);continue}try{await pushOne(a);const ap=state.appointments.find(x=>x.id===a.id);if(ap)ap.sent=true;}catch(e){console.warn("Envio falhou",e);rest.push(a)}}
   store("proOutbox",rest);store("proAppointments",state.appointments);
   if(q.length&&!rest.length)toast("Solicitação enviada à equipe PRO Service")}
  finally{_flushing=false}}
-function queueSend(a){const q=load("proOutbox",[]);q.push({id:a.id,protocol:a.protocol,service:a.service,pro:a.pro,iso:a.iso,time:a.time,payment:a.payment,address:a.address,note:a.note,user:{name:(state.user||{}).name,phone:(state.user||{}).phone}});store("proOutbox",q);flushOutbox()}
+function queueSend(a){const q=load("proOutbox",[]);q.push({id:a.id,protocol:a.protocol,service:a.service,pro:a.pro,iso:a.iso,time:a.time,payment:a.payment,address:a.address,note:a.note,uid:(state.user||{}).uid,user:{name:(state.user||{}).name,phone:(state.user||{}).phone}});store("proOutbox",q);flushOutbox()}
 window.addEventListener("online",flushOutbox);window.addEventListener("load",()=>setTimeout(flushOutbox,1500));
 setInterval(flushOutbox,30000);
 
 async function pullStatus(){const c=sbc();if(!c||!navigator.onLine)return;
- const pend=state.appointments.filter(a=>a.status==="Aguardando confirmação"&&a.sent);if(!pend.length)return;
- try{const r=await c.rpc("status_solicitacoes",{ids:pend.map(a=>Number(a.id).toString(36))});
+ const pend=state.appointments.filter(a=>a.status==="Aguardando confirmação"&&a.sent);if(!pend.length||!await sess())return;
+ try{const r=await c.from("solicitacoes").select("id,status").in("id",pend.map(a=>Number(a.id).toString(36)));
   if(r.error||!r.data)return;let ch=false;
   r.data.forEach(x=>{const a=pend.find(p=>Number(p.id).toString(36)===x.id);if(!a)return;
    const st=/cancel|recus/i.test(x.status||"")?"Cancelado":/confirm|convert/i.test(x.status||"")?"Confirmado":null;
@@ -306,7 +339,7 @@ function savePhotos(l){try{localStorage.setItem("proPhotos",JSON.stringify(l));r
 const PH_BUCKET="fotos-servico";let _sp=null;
 function syncPhotos(){_sp=(_sp||Promise.resolve()).then(runSync,runSync);return _sp}
 async function runSync(){const c=sbc();if(!c||!navigator.onLine)return false;
-  const pend=photos().filter(p=>!p.synced&&p.src);if(!pend.length)return true;
+  const ss=await sess();if(!ss)return false;const me=[(ss.user.email||"").toLowerCase(),((state.user||{}).email||"").toLowerCase()];const pend=photos().filter(p=>!p.synced&&p.src&&(!p.email||me.includes(String(p.email).toLowerCase())));if(!pend.length)return true;
   const done=[];let allOk=true;
   for(const p of pend){try{
     const blob=await (await fetch(p.src)).blob(),path=p.id+".jpg";
@@ -362,9 +395,12 @@ async function pickFotos(inp){const fs=[...inp.files].filter(f=>f.type.startsWit
   fotoGrid();confirmSend(out.length)}
 function dlFoto(id){const p=photos().find(x=>x.id===id);if(!p)return;const a=document.createElement("a");a.href=p.src;a.download=(p.title||"foto").replace(/[^\w\-]+/g,"_")+".jpg";document.body.appendChild(a);a.click();a.remove()}
 function delFoto(id){if(!confirm("Excluir esta foto?"))return;const l=photos().filter(p=>p.id!==id);savePhotos(l);state.appointments.forEach(a=>{if(a.photoCount!=null)a.photoCount=l.filter(p=>p.appt===a.id).length});store("proAppointments",state.appointments);toast("Foto excluída");fotoGrid()}
-function logout(){try{localStorage.removeItem("proUser");sessionStorage.removeItem("proUser")}catch(e){}state.user=null;go("welcome")}
+function logout(){try{localStorage.removeItem("proUser");sessionStorage.removeItem("proUser")}catch(e){}try{sbc()?.auth.signOut({scope:"local"}).catch(()=>{})}catch(e){}state.user=null;go("welcome")}
 function edit(){const u=state.user||{};app.innerHTML=`<main><button class="iconbtn" aria-label="Voltar" onclick="goTab('perfil')">${I("back")}</button><h1 class="heading" style="margin-top:14px">Dados pessoais</h1><p class="sub">Mantenha seu contato atualizado para a confirmação dos serviços.</p><form onsubmit="saveEdit(event)" novalidate><div class="field"><label for="n">Nome completo</label><input id="n" value="${esc(u.name)}" autocomplete="name"></div><div class="field"><label for="p">Telefone / WhatsApp</label><input id="p" value="${esc(u.phone||"")}" inputmode="tel" placeholder="(00) 00000-0000" oninput="this.value=mask(this.value)"></div><div class="field"><label for="e">E-mail</label><input id="e" type="email" value="${esc(u.email)}"></div><p class="err" id="err" role="alert"></p><button class="primary">Salvar alterações</button></form></main>`}
-function saveEdit(e){e.preventDefault();const v=id=>document.getElementById(id).value.trim();if(v("n").length<2)return document.getElementById("err").textContent="Informe seu nome.";if(!/^\S+@\S+\.\S+$/.test(v("e")))return document.getElementById("err").textContent="Informe um e-mail válido.";const prev=state.user.email;state.user={...state.user,name:v("n"),phone:v("p"),email:v("e")};store("proUsers",[...load("proUsers",[]).filter(u=>u.email!==prev),state.user]);void 0;toast("Dados atualizados");goTab("perfil")}
+async function saveEdit(e){e.preventDefault();const v=id=>document.getElementById(id).value.trim();if(v("n").length<2)return document.getElementById("err").textContent="Informe seu nome.";if(!/^\S+@\S+\.\S+$/.test(v("e")))return document.getElementById("err").textContent="Informe um e-mail válido.";const c=sbc(),s=await sess(),ne=v("e"),er=m=>{document.getElementById("err").textContent=m};
+ if(ne.toLowerCase()!==state.user.email.toLowerCase()){if(!c||!s)return er("Conecte-se à internet para alterar o e-mail.");const q=await c.auth.updateUser({email:ne});if(q.error)return er(/already|registered|exists/i.test(q.error.message||"")?"Este e-mail já está em uso por outra conta.":"Não foi possível alterar o e-mail agora. Tente novamente.");if(q.data&&q.data.user&&q.data.user.new_email)return er("A troca de e-mail não está disponível no momento. Fale com a PRO Service.")}
+ if(c&&s)c.auth.updateUser({data:{name:v("n"),phone:v("p")}}).catch(()=>{});
+ const prev=state.user.email;state.user={...state.user,name:v("n"),phone:v("p"),email:ne};store("proUsers",[...load("proUsers",[]).filter(u=>u.email!==prev),state.user]);void 0;toast("Dados atualizados");goTab("perfil")}
 function settings(){const u=state.user||{};app.innerHTML=`<main><button class="iconbtn" aria-label="Voltar" onclick="goTab('perfil')">${I("back")}</button><h1 class="heading" style="margin-top:14px">Configurações do app</h1><p class="sub">Gerencie o acesso à sua conta.</p><form class="card" style="margin-top:14px" onsubmit="saveLogin(event)" novalidate><b>Alterar login</b><p class="muted" style="margin:4px 0 0">Login atual: ${esc(u.email)}</p><div class="field"><label for="cl-e">Novo e-mail</label><input id="cl-e" type="email" autocomplete="off" placeholder="novo@email.com"></div><div class="field"><label for="cl-p">Senha atual</label><input id="cl-p" type="password" autocomplete="current-password" placeholder="Sua senha atual"></div><p class="err" id="err-l" role="alert"></p><button class="primary">Salvar novo login</button></form><form class="card" style="margin-top:14px" onsubmit="savePass(event)" novalidate><b>Alterar senha</b><div class="field"><label for="cs-a">Senha atual</label><input id="cs-a" type="password" autocomplete="current-password" placeholder="Sua senha atual"></div><div class="field"><label for="cs-n">Nova senha</label><input id="cs-n" type="password" autocomplete="new-password" placeholder="Mínimo de 6 caracteres"></div><div class="field"><label for="cs-c">Confirmar nova senha</label><input id="cs-c" type="password" autocomplete="new-password" placeholder="Repita a nova senha"></div><p class="err" id="err-s" role="alert"></p><button class="primary">Salvar nova senha</button></form>${adminWA()}</main>`}
 function adminWA(){const u=state.user||{};if((u.email||"").toLowerCase()!==ADMIN_EMAIL)return"";return `<form class="card" style="margin-top:14px" onsubmit="saveWA(event)" novalidate><b>WhatsApp de atendimento</b><p class="muted" style="margin:4px 0 0">Número que recebe as mensagens dos clientes (Ajuda e suporte e agendamentos). Atual: ${esc(mask(WA.replace(/^55/,"")))}</p><div class="field"><label for="cw-n">Novo número com DDD</label><input id="cw-n" inputmode="tel" autocomplete="off" placeholder="(00) 00000-0000" oninput="this.value=mask(this.value)"></div><p class="err" id="err-w" role="alert"></p><button class="primary">Salvar número</button><button type="button" class="link" style="display:block;margin:10px auto 0" onclick="resetWA()">Restaurar número padrão</button></form>`}
 function saveWA(e){e.preventDefault();const d=document.getElementById("cw-n").value.replace(/\D/g,""),er=m=>{document.getElementById("err-w").textContent=m};er("");
@@ -372,19 +408,24 @@ function saveWA(e){e.preventDefault();const d=document.getElementById("cw-n").va
  if(d.length<10||d.length>11)return er("Informe um número válido com DDD.");
  WA="55"+d;try{localStorage.setItem("proWA",WA)}catch(x){}toast("WhatsApp atualizado");settings()}
 function resetWA(){if((state.user?.email||"").toLowerCase()!==ADMIN_EMAIL)return;WA=WA_DEFAULT;try{localStorage.removeItem("proWA")}catch(x){}toast("Número padrão restaurado");settings()}
-function saveLogin(e){e.preventDefault();const g=id=>document.getElementById(id).value,er=m=>{document.getElementById("err-l").textContent=m},ne=g("cl-e").trim(),pw=g("cl-p"),u=state.user;er("");
+async function saveLogin(e){e.preventDefault();const g=id=>document.getElementById(id).value,er=m=>{document.getElementById("err-l").textContent=m},ne=g("cl-e").trim(),pw=g("cl-p"),u=state.user;er("");
  if(!/^\S+@\S+\.\S+$/.test(ne))return er("Informe um e-mail válido.");
  if(ne.toLowerCase()===u.email.toLowerCase())return er("O novo e-mail é igual ao atual.");
  if(u.ph!==pwHash(pw))return er("Senha atual incorreta.");
  const us=load("proUsers",[]);if(us.some(x=>x.email.toLowerCase()===ne.toLowerCase()&&x.email!==u.email))return er("Este e-mail já está em uso por outra conta.");
+ const c=sbc(),s=await sess();if(!c||!s)return er("Conecte-se à internet para alterar o login.");
+ const q=await c.auth.updateUser({email:ne});if(q.error)return er(/already|registered|exists/i.test(q.error.message||"")?"Este e-mail já está em uso por outra conta.":"Não foi possível alterar o login agora. Tente novamente.");
+ if(q.data&&q.data.user&&q.data.user.new_email)return er("A troca de e-mail não está disponível no momento. Fale com a PRO Service.");
  const prev=u.email;state.user={...u,email:ne};store("proUsers",[...us.filter(x=>x.email!==prev),state.user]);
  const l=photos();if(l.some(p=>p.email===prev)){l.forEach(p=>{if(p.email===prev)p.email=ne});savePhotos(l)}
  toast("Login atualizado");settings()}
-function savePass(e){e.preventDefault();const g=id=>document.getElementById(id).value,er=m=>{document.getElementById("err-s").textContent=m},cur=g("cs-a"),n1=g("cs-n"),n2=g("cs-c"),u=state.user;er("");
+async function savePass(e){e.preventDefault();const g=id=>document.getElementById(id).value,er=m=>{document.getElementById("err-s").textContent=m},cur=g("cs-a"),n1=g("cs-n"),n2=g("cs-c"),u=state.user;er("");
  if(u.ph!==pwHash(cur))return er("Senha atual incorreta.");
  if(n1.length<6)return er("A nova senha deve ter ao menos 6 caracteres.");
  if(n1===cur)return er("A nova senha deve ser diferente da atual.");
  if(n1!==n2)return er("A confirmação não confere com a nova senha.");
+ const c=sbc(),s=await sess();if(!c||!s)return er("Conecte-se à internet para alterar a senha.");
+ const q=await c.auth.updateUser({password:n1});if(q.error)return er(/same|different/i.test(q.error.message||"")?"A nova senha deve ser diferente da atual.":"Não foi possível alterar a senha agora. Tente novamente.");
  state.user={...u,ph:pwHash(n1),pv:2};persistUser();toast("Senha alterada");settings()}
 const LOYAL=[["shield","Profissionais credenciados","Equipe técnica preparada para cuidar da sua casa."],["clock","Agendamento em poucos passos","Escolha o serviço, o dia e o horário e acompanhe tudo pelo app."],["home","Seu histórico sempre à mão","Repita um serviço ou peça um novo quando precisar."]];
 const COVER_SVC=[["bolt","Elétrica"],["drop","Hidráulica"],["cam","CFTV"],["brick","Construção civil"],["chair","Móveis"],["roof","Calhas"],["shield","Segurança eletrônica"],["wifi","Telecom"]];
