@@ -157,7 +157,7 @@ body.sbc .sidebar>:not(.brand):not(.group):not(.nav){display:none!important}
 #pro-gate input{width:100%;box-sizing:border-box;padding:15px 16px;border:1px solid #e3e8ef;border-radius:14px;background:#fff;font-weight:500;font-size:15px;font-family:inherit;color:#102750;outline:0}
 #pro-gate input:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(253,97,6,.14)}
 #pro-gate #pro-lg-btn{margin-top:24px}
-#pro-gate .pxbadge{display:inline-block;background:#fff1e9;color:#FD6106;font-size:11px;font-weight:800;letter-spacing:1.3px;padding:6px 14px;border-radius:20px;margin:0 0 14px}#pro-gate .pxsec{background:#fff;color:#023072;border:1px solid #e3e8ef;box-shadow:none;margin-top:12px}#pro-lg-err,#pro-cd-err{color:#C62828;font-size:13px;margin-top:12px;min-height:18px}
+#pro-gate .pxbadge{display:inline-block;background:#fff1e9;color:#FD6106;font-size:11px;font-weight:800;letter-spacing:1.3px;padding:6px 14px;border-radius:20px;margin:0 0 14px}#pro-gate .pxsec{background:#fff;color:#023072;border:1px solid #e3e8ef;box-shadow:none;margin-top:12px}#pro-lg-err,#pro-cd-err,#pro-es-err,#pro-np-err{color:#C62828;font-size:13px;margin-top:12px;min-height:18px}#pro-gate .pxlk{display:block;margin:6px auto 0;background:none;border:0;color:#023072;font:700 13px inherit;font-family:inherit;text-decoration:underline;cursor:pointer;padding:8px}#pro-gate .pxlk:focus-visible{outline:2px solid #FD6106;border-radius:8px}
 #pro-bar{position:fixed;right:10px;bottom:10px;z-index:20;display:none;align-items:center;gap:8px;font:11px 'Plus Jakarta Sans',Inter,'Segoe UI',Arial,sans-serif}
 #pro-sync{background:#fff;color:#435675;border:1px solid #e3e8ef;border-left:4px solid #9E9E9E;border-radius:20px;padding:4px 10px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 #pro-out{background:#fff;color:#023072;border:1px solid #e3e8ef;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12)}</style>
@@ -165,7 +165,9 @@ body.sbc .sidebar>:not(.brand):not(.group):not(.nav){display:none!important}
 <img id="pro-logo" class="pxlg" alt="PRO Service" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="><div class="pxbadge">DASHBOARD · ACESSO ADMINISTRATIVO</div>
 <div id="pro-chk"><p style="margin:10px 0 0">Verificando acesso…</p></div>
 <div id="pro-welcome" style="display:none"><div class="pxtg">Gestão do seu negócio</div><h1>Painel de serviços<br>com praticidade.</h1><p>Acesse o painel para acompanhar clientes, orçamentos, agenda e financeiro em poucos passos.</p><button class="pxbt" onclick="proIr()">Entrar</button><button class="pxbt pxsec" onclick="proCad()">Criar conta</button><button class="pxbt pxsec" id="pro-gate-inst" onclick="proInstall()" style="display:none">Instalar app no celular</button><div class="pxft">PRO Service • Gestão residencial</div></div>
-<div id="pro-form" style="display:none"><button class="pxbk" onclick="proVoltar()" aria-label="Voltar">&#8249;</button><h2>Bem-vindo de volta</h2><p style="margin-bottom:6px">Acesse sua conta para continuar.</p><label for="pro-lg-em">E-mail</label><input id="pro-lg-em" type="email" placeholder="voce@email.com" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('pro-lg-pw').focus()"><label for="pro-lg-pw">Senha</label><input id="pro-lg-pw" type="password" placeholder="Sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')proLogin()"><button id="pro-lg-btn" class="pxbt" onclick="proLogin()">Entrar</button><div id="pro-lg-err"></div></div>
+<div id="pro-form" style="display:none"><button class="pxbk" onclick="proVoltar()" aria-label="Voltar">&#8249;</button><h2>Bem-vindo de volta</h2><p style="margin-bottom:6px">Acesse sua conta para continuar.</p><label for="pro-lg-em">E-mail</label><input id="pro-lg-em" type="email" placeholder="voce@email.com" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('pro-lg-pw').focus()"><label for="pro-lg-pw">Senha</label><input id="pro-lg-pw" type="password" placeholder="Sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')proLogin()"><button id="pro-lg-btn" class="pxbt" onclick="proLogin()">Entrar</button><div id="pro-lg-err"></div><button type="button" class="pxlk" onclick="proEsq()">Esqueci minha senha</button></div>
+<div id="pro-esq" style="display:none"><button class="pxbk" onclick="proIr()" aria-label="Voltar">&#8249;</button><h2>Recuperar senha</h2><p style="margin-bottom:6px">Digite seu e-mail e enviaremos um link para criar uma nova senha.</p><label for="pro-es-em">E-mail</label><input id="pro-es-em" type="email" placeholder="voce@email.com" autocomplete="username" onkeydown="if(event.key==='Enter')proEnviarReset()"><button id="pro-es-btn" class="pxbt" style="margin-top:24px" onclick="proEnviarReset()">Enviar link</button><div id="pro-es-err"></div></div>
+<div id="pro-np" style="display:none"><h2>Criar nova senha</h2><p style="margin-bottom:6px">Escolha a nova senha de acesso ao painel.</p><label for="pro-np-pw">Nova senha</label><input id="pro-np-pw" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"><label for="pro-np-p2">Confirmar senha</label><input id="pro-np-p2" type="password" placeholder="Repita a senha" autocomplete="new-password" onkeydown="if(event.key==='Enter')proSalvarSenha()"><button id="pro-np-btn" class="pxbt" style="margin-top:24px" onclick="proSalvarSenha()">Salvar nova senha</button><div id="pro-np-err"></div></div>
 <div id="pro-cad" style="display:none"><button class="pxbk" onclick="proVoltar()" aria-label="Voltar">&#8249;</button><h2>Criar conta</h2><p style="margin-bottom:6px">O acesso ao painel precisa ser liberado pelo administrador.</p><label for="pro-cd-em">E-mail</label><input id="pro-cd-em" type="email" placeholder="voce@email.com" autocomplete="username"><label for="pro-cd-pw">Senha</label><input id="pro-cd-pw" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"><label for="pro-cd-p2">Confirmar senha</label><input id="pro-cd-p2" type="password" placeholder="Repita a senha" autocomplete="new-password" onkeydown="if(event.key==='Enter')proCriar()"><button id="pro-cd-btn" class="pxbt" style="margin-top:24px" onclick="proCriar()">Criar conta</button><div id="pro-cd-err"></div></div>
 <div id="pro-pend" style="display:none"><h2>Aguardando liberação</h2><p id="pro-pend-tx"></p><button class="pxbt pxsec" onclick="proSairPend()">Sair</button></div>
 </div></div>
@@ -233,8 +235,8 @@ window.proLogin=async function(){
  if(r.error){msg(navigator.onLine?'E-mail ou senha incorretos.':'Sem internet. Conecte-se para entrar.');return}
  try{sessionStorage.setItem('proAuthOk','1')}catch(e){}
  G('pro-lg-pw').value='';show('pro-form',false);show('pro-chk',true);enter()};
-window.proIr=function(){show('pro-welcome',false);show('pro-form',true);setTimeout(function(){G('pro-lg-em').focus()},50)};
-window.proVoltar=function(){show('pro-form',false);show('pro-cad',false);show('pro-welcome',true);msg('');msg('','pro-cd-err')};
+window.proIr=function(){show('pro-welcome',false);show('pro-esq',false);show('pro-form',true);setTimeout(function(){G('pro-lg-em').focus()},50)};
+window.proVoltar=function(){show('pro-form',false);show('pro-cad',false);show('pro-esq',false);show('pro-welcome',true);msg('');msg('','pro-cd-err');msg('','pro-es-err')};
 window.proCad=function(){show('pro-welcome',false);show('pro-cad',true);setTimeout(function(){G('pro-cd-em').focus()},50)};
 window.proCriar=async function(){
  var em=G('pro-cd-em').value.trim(),pw=G('pro-cd-pw').value,p2=G('pro-cd-p2').value,b=G('pro-cd-btn'),E='pro-cd-err';msg('',E);
@@ -250,6 +252,31 @@ window.proCriar=async function(){
  if(r.error||(u&&u.identities&&!u.identities.length)){msg(r.error&&!/registered|already/i.test(r.error.message)?'Não foi possível criar a conta: '+r.error.message:'Este e-mail já tem cadastro. Volte e toque em Entrar.',E);return}
  if(r.data&&r.data.session){try{sessionStorage.setItem('proAuthOk','1')}catch(e){}show('pro-cad',false);show('pro-chk',true);enter();return}
  var e2=G(E);e2.style.color='#2E7D32';e2.textContent='Conta criada! Confirme o e-mail que enviamos, depois volte e toque em Entrar.'};
+/* ===== Recuperar senha ===== */
+function hideP(){['pro-chk','pro-welcome','pro-form','pro-cad','pro-pend','pro-esq','pro-np'].forEach(function(i){show(i,false)})}
+function limpaUrl(){try{history.replaceState(null,'',location.pathname)}catch(e){}}
+window.proEsq=function(){var v=G('pro-lg-em').value.trim();hideP();show('pro-esq',true);msg('','pro-es-err');if(v)G('pro-es-em').value=v;setTimeout(function(){G('pro-es-em').focus()},50)};
+window.proEnviarReset=async function(){
+ var em=G('pro-es-em').value.trim(),b=G('pro-es-btn'),E='pro-es-err';msg('',E);
+ if(!em){msg('Digite o seu e-mail.',E);return}
+ if(!navigator.onLine){msg('Sem internet. Conecte-se para continuar.',E);return}
+ b.disabled=true;b.textContent='Enviando…';
+ var o={};if(/^https?:$/.test(location.protocol))o.redirectTo=location.origin+location.pathname;
+ var r=await sb.auth.resetPasswordForEmail(em,o);
+ b.disabled=false;b.textContent='Enviar link';
+ if(r.error){msg(/rate|seconds|too many/i.test(r.error.message)?'Muitas tentativas. Aguarde alguns minutos e tente de novo.':'Não foi possível enviar: '+r.error.message,E);return}
+ var e2=G(E);e2.style.color='#2E7D32';e2.textContent='Se este e-mail tiver cadastro, enviamos o link para criar a nova senha. Confira também o spam.'};
+window.proNovaSenha=function(){hideP();show('pro-np',true);msg('','pro-np-err');setTimeout(function(){G('pro-np-pw').focus()},50)};
+window.proSalvarSenha=async function(){
+ var pw=G('pro-np-pw').value,p2=G('pro-np-p2').value,b=G('pro-np-btn'),E='pro-np-err';msg('',E);
+ if(pw.length<6){msg('A senha deve ter pelo menos 6 caracteres.',E);return}
+ if(pw!==p2){msg('As senhas não conferem.',E);return}
+ b.disabled=true;b.textContent='Salvando…';
+ var r=await sb.auth.updateUser({password:pw});
+ b.disabled=false;b.textContent='Salvar nova senha';
+ if(r.error){msg(/same|different/i.test(r.error.message)?'A nova senha precisa ser diferente da senha anterior.':'Não foi possível salvar: '+r.error.message,E);return}
+ try{sessionStorage.setItem('proAuthOk','1')}catch(e){}
+ G('pro-np-pw').value='';G('pro-np-p2').value='';limpaUrl();hideP();show('pro-chk',true);enter()};
 window.proSairPend=async function(){try{await sb.auth.signOut()}catch(e){}try{sessionStorage.removeItem('proAuthOk')}catch(e){}location.reload()};
 window.proSair=async function(){
  var ok=await flush();
@@ -262,6 +289,13 @@ async function init(){
   if(aok()&&!navigator.onLine&&ls('servillyData')!=null){start();status('local');return}
   G('pro-chk').innerHTML='<p>Não foi possível carregar o sistema de login. Verifique a internet (ou bloqueador de anúncios) e tente de novo.</p><button class="pxbt" onclick="location.reload()">Tentar de novo</button>';return}
  sb=supabase.createClient(URL_,KEY);window.__sb=sb;
+ sb.auth.onAuthStateChange(function(ev){if(ev==='PASSWORD_RECOVERY')window.proNovaSenha()});
+ var hp=new URLSearchParams(location.hash.replace(/^#/,''));
+ if(hp.get('error_code')||hp.get('error')){limpaUrl();window.proEsq();msg('Este link expirou ou já foi usado. Peça um novo abaixo.','pro-es-err');return}
+ if(hp.get('type')==='recovery'||/[?&]code=/.test(location.search)){
+  var rs=null;try{rs=(await sb.auth.getSession()).data.session}catch(e){}
+  if(rs){window.proNovaSenha();return}
+  limpaUrl();window.proEsq();msg('Este link expirou ou já foi usado. Peça um novo abaixo.','pro-es-err');return}
  var s=null;try{s=(await sb.auth.getSession()).data.session}catch(e){}
  if(!s||!aok()){
   if(aok()&&!navigator.onLine&&ls('servillyData')!=null){start();status('off');return}
