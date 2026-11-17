@@ -160,7 +160,7 @@ body.sbc .sidebar>:not(.brand):not(.group):not(.nav){display:none!important}
 #pro-gate .pxbadge{display:inline-block;background:#fff1e9;color:#FD6106;font-size:11px;font-weight:800;letter-spacing:1.3px;padding:6px 14px;border-radius:20px;margin:0 0 14px}#pro-gate .pxsec{background:#fff;color:#023072;border:1px solid #e3e8ef;box-shadow:none;margin-top:12px}#pro-lg-err,#pro-cd-err,#pro-es-err,#pro-np-err{color:#C62828;font-size:13px;margin-top:12px;min-height:18px}#pro-gate .pxlk{display:block;margin:6px auto 0;background:none;border:0;color:#023072;font:700 13px inherit;font-family:inherit;text-decoration:underline;cursor:pointer;padding:8px}#pro-gate .pxlk:focus-visible{outline:2px solid #FD6106;border-radius:8px}
 #pro-bar{position:fixed;right:10px;bottom:10px;z-index:20;display:none;align-items:center;gap:8px;font:11px 'Plus Jakarta Sans',Inter,'Segoe UI',Arial,sans-serif}
 #pro-sync{background:#fff;color:#435675;border:1px solid #e3e8ef;border-left:4px solid #9E9E9E;border-radius:20px;padding:4px 10px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
-#pro-out{background:#fff;color:#023072;border:1px solid #e3e8ef;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12)}</style>
+#pro-out{background:#fff;color:#023072;border:1px solid #e3e8ef;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12)}#pro-nt{background:#FD6106;color:#fff;border:0;border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.18)}</style>
 <div id="pro-gate"><div class="pxcd">
 <img id="pro-logo" class="pxlg" alt="PRO Service" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="><div class="pxbadge">DASHBOARD · ACESSO ADMINISTRATIVO</div>
 <div id="pro-chk"><p style="margin:10px 0 0">Verificando acesso…</p></div>
@@ -171,7 +171,7 @@ body.sbc .sidebar>:not(.brand):not(.group):not(.nav){display:none!important}
 <div id="pro-cad" style="display:none"><button class="pxbk" onclick="proVoltar()" aria-label="Voltar">&#8249;</button><h2>Criar conta</h2><p style="margin-bottom:6px">O acesso ao painel precisa ser liberado pelo administrador.</p><label for="pro-cd-em">E-mail</label><input id="pro-cd-em" type="email" placeholder="voce@email.com" autocomplete="username"><label for="pro-cd-pw">Senha</label><input id="pro-cd-pw" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"><label for="pro-cd-p2">Confirmar senha</label><input id="pro-cd-p2" type="password" placeholder="Repita a senha" autocomplete="new-password" onkeydown="if(event.key==='Enter')proCriar()"><button id="pro-cd-btn" class="pxbt" style="margin-top:24px" onclick="proCriar()">Criar conta</button><div id="pro-cd-err"></div></div>
 <div id="pro-pend" style="display:none"><h2>Aguardando liberação</h2><p id="pro-pend-tx"></p><button class="pxbt pxsec" onclick="proSairPend()">Sair</button></div>
 </div></div>
-<div id="pro-bar"><span id="pro-sync">Sincronizado</span><button id="pro-inst" onclick="proInstall()" style="display:none">Instalar app</button><button id="pro-out" onclick="proSair()">Sair</button></div>
+<div id="pro-bar"><span id="pro-sync">Sincronizado</span><button id="pro-nt" onclick="proAvisos()" style="display:none">Ativar avisos</button><button id="pro-inst" onclick="proInstall()" style="display:none">Instalar app</button><button id="pro-out" onclick="proSair()">Sair</button></div>
 <script>(function(){
 var URL_='https://ftnhcbhgfeymwbjywdmp.supabase.co',KEY='sb_publishable_L0NsRLPB18V1E7jTkWja8Q_NlaTYj6L';
 var SYNC=['servillyData','proConfig','proApp','proFotos','proDocs','proFunil','proSbImp'];
@@ -213,7 +213,7 @@ async function pull(){
 function aok(){try{return sessionStorage.getItem('proAuthOk')==='1'}catch(e){return false}}
 function show(id,on){var e=G(id);if(e)e.style.display=on?'':'none'}
 function msg(t,id){var e=G(id||'pro-lg-err');e.style.color='';e.textContent=t||''}
-function start(){ready=true;show('pro-gate',false);show('pro-bar',true);status(dirty().length?'pend':'ok')}
+function start(){ready=true;show('pro-gate',false);show('pro-bar',true);status(dirty().length?'pend':'ok');liveStart();upBtn()}
 async function pend(t){
  var em='';try{em=(await sb.auth.getSession()).data.session.user.email||''}catch(e){}
  show('pro-chk',false);show('pro-form',false);show('pro-cad',false);show('pro-welcome',false);
@@ -341,9 +341,46 @@ window.proSetStatus=function(id,status,keep){ var q=stq().filter(function(x){ret
   if(await importar()){
    try{data=JSON.parse(ls('servillyData')||'{}');Object.keys(modules).forEach(function(k){if(!data[k])data[k]=[]})}catch(e){}
    try{render()}catch(e){}
-   try{var t=document.getElementById('toast');if(t){t.textContent=(window.__novasSol||1)+' nova(s) solicitação(ões) do App Cliente';t.style.display='block';setTimeout(function(){t.style.display='none'},4000)}}catch(e){}
+   try{var t=Date.now()-lastLive>20000?document.getElementById('toast'):null;if(t){t.textContent=(window.__novasSol||1)+' nova(s) solicitação(ões) do App Cliente';t.style.display='block';setTimeout(function(){t.style.display='none'},4000)}}catch(e){}
    await flush()}}
  catch(e){}}
+/* ===== Tempo real: pedidos e fotos enviados pelos clientes (Supabase Realtime) ===== */
+var rt=null,lastLive=0,naoLidas=0,titulo0=document.title,fotoN=0,fotoTm=null,fotoCli='';
+function unlockAudio(){try{var A=window.AudioContext||window.webkitAudioContext;if(!A)return;var c=window.__ac||(window.__ac=new A());if(c.state==='suspended')c.resume()}catch(e){}}
+document.addEventListener('pointerdown',unlockAudio,{passive:true});
+function bip(){try{unlockAudio();var c=window.__ac;if(!c)return;[[880,0],[1175,.2]].forEach(function(n){var o=c.createOscillator(),g=c.createGain(),t=c.currentTime+n[1];o.type='sine';o.frequency.value=n[0];g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.28,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.4);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.45)})}catch(e){}}
+function notifSys(t,b){
+ if(!('Notification' in window)||Notification.permission!=='granted')return;
+ var ic=(document.querySelector('.brand img')||{}).src||undefined,o={body:b,icon:ic,tag:'pro-live'};
+ try{var n=new Notification(t,o);n.onclick=function(){try{window.focus();n.close()}catch(e){}}}
+ catch(e){try{navigator.serviceWorker.getRegistration().then(function(r){if(r)r.showNotification(t,o)})}catch(x){}}}
+function avisar(t,b){
+ lastLive=Date.now();bip();
+ try{if(typeof toast==='function')toast(t+(b?' — '+b:''))}catch(e){}
+ if(document.visibilityState!=='visible'){naoLidas++;document.title='('+naoLidas+') '+titulo0;notifSys(t,b)}}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){naoLidas=0;document.title=titulo0}});
+function upBtn(){var b=G('pro-nt');if(b)b.style.display=('Notification' in window&&Notification.permission==='default')?'':'none'}
+window.proAvisos=function(){unlockAudio();
+ try{Notification.requestPermission().then(function(p){upBtn();if(p==='granted'){bip();notifSys('PRO Service','Avisos ativados. Você será avisado de novos pedidos e fotos.')}})}catch(e){upBtn()}};
+async function aoVivoSol(n){
+ lastLive=Date.now();
+ try{if(await importar()){
+   try{data=JSON.parse(ls('servillyData')||'{}');Object.keys(modules).forEach(function(k){if(!data[k])data[k]=[]})}catch(e){}
+   try{render()}catch(e){}
+   await flush()}}catch(e){}
+ avisar('Novo pedido de '+(n.cliente||'cliente'),[n.servico,n.data].filter(Boolean).join(' • '))}
+function aoVivoFoto(n){
+ if(!n||!n.email)return; /* fotos enviadas pelo próprio painel não têm e-mail: não avisa */
+ try{if(typeof PX!=='undefined'&&PX.fotoLoad)PX.fotoLoad(true)}catch(e){}
+ fotoN++;fotoCli=n.cliente||fotoCli;clearTimeout(fotoTm);
+ fotoTm=setTimeout(function(){var q=fotoN,c=fotoCli;fotoN=0;fotoCli='';avisar(q>1?q+' novas fotos de '+(c||'cliente'):'Nova foto de '+(c||'cliente'),'Veja na aba Fotos')},1200)}
+function liveStart(){
+ if(rt||!sb||!sb.channel)return;
+ try{rt=sb.channel('pro-live')
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'solicitacoes'},function(p){aoVivoSol(p.new||{})})
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'fotos'},function(p){aoVivoFoto(p.new||{})})
+  .subscribe(function(st){if(st==='CHANNEL_ERROR'||st==='TIMED_OUT')console.warn('Tempo real indisponível (usando busca a cada 15s):',st)})}
+ catch(e){console.warn('Tempo real',e)}}
 setInterval(atualizarSolicitacoes,15000);
 window.addEventListener('online',function(){flush();stFlush()});
 document.addEventListener('visibilitychange',function(){
