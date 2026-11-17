@@ -509,16 +509,18 @@ function profile(){const u=state.user||{name:"Cliente PRO",email:""},n=state.app
  shell(`<div class="profile-head"><button class="avwrap" aria-label="Alterar foto de perfil" onclick="document.getElementById('ph').click()"><div class="avatar">${u.photo?`<img src="${esc(u.photo)}" alt="">`:esc(ini(u.name))}</div><span class="avcam">${I("photo",16)}</span></button><input id="ph" type="file" accept="image/*" hidden onchange="setPhoto(this)"><b>${esc(u.name)}</b>${u.photo?`<div class="row" style="justify-content:center;gap:18px;margin:4px 0 2px"><button class="link" onclick="adjustPhoto()">Ajustar posição</button><button class="link" onclick="savePhoto(null)">Remover foto</button></div>`:`<button class="link" style="display:block;margin:4px auto 2px" onclick="document.getElementById('ph').click()">Adicionar foto</button>`}<p class="muted" style="margin:2px 0 0">${esc(u.email)}${u.phone?" • "+esc(u.phone):""}</p><p class="muted" style="margin:6px 0 0">${n} solicitaç${n===1?"ão":"ões"} realizada${n===1?"":"s"}</p></div><button class="menuitem" onclick="go('edit')">${I("user",20)}Dados pessoais<span>${I("chev",18)}</span></button><button class="menuitem" onclick="go('settings')">${I("gear",20)}Configurações do app<span>${I("chev",18)}</span></button><button class="menuitem" onclick="support()">${I("help",20)}Ajuda e suporte<span>${I("chev",18)}</span></button><button class="menuitem danger" style="margin-top:14px" onclick="logout()">${I("out",20)}Sair da conta</button>`)}
 let cr=null;
 function openCrop(src,ox=0,oy=0,z=1){const im=new Image();im.onload=()=>{cr={im,src,ox,oy,z};showCrop()};im.onerror=()=>toast("Não foi possível ler a imagem");im.src=src}
-function adjustPhoto(){const u=state.user,p=u.photoPos||[0,0,1];openCrop(u.photoSrc||u.photo,...p)}
+function adjustPhoto(){const u=state.user,p=u.photoPos||[0,0,1],s=u.photoSrc||u.photo;
+ if(/^https?:/.test(s)){fetch(s).then(r=>r.blob()).then(b=>new Promise((ok,no)=>{const f=new FileReader();f.onload=()=>ok(f.result);f.onerror=no;f.readAsDataURL(b)})).then(d=>openCrop(d,...p)).catch(()=>toast("Não foi possível abrir a foto"));return}
+ openCrop(s,...p)}
 function clampCrop(){const{im}=cr,s=260/Math.min(im.width,im.height)*cr.z,mx=Math.max(0,(im.width*s-260)/2),my=Math.max(0,(im.height*s-260)/2);cr.ox=Math.max(-mx,Math.min(mx,cr.ox));cr.oy=Math.max(-my,Math.min(my,cr.oy))}
 function drawCrop(S=260,c=document.getElementById("cv").getContext("2d")){const{im,ox,oy,z}=cr,k=S/260,s=260/Math.min(im.width,im.height)*z*k;c.fillStyle="#fff";c.fillRect(0,0,S,S);c.drawImage(im,S/2+ox*k-im.width*s/2,S/2+oy*k-im.height*s/2,im.width*s,im.height*s)}
 function showCrop(){let o=document.getElementById("crop");if(!o){o=document.createElement("div");o.id="crop";o.className="crop";document.body.appendChild(o)}
  o.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Ajustar foto"><h3>Ajustar foto</h3><p class="muted" style="margin:0">Arraste para centralizar e use o controle para ampliar.</p><canvas id="cv" width="260" height="260"></canvas><div class="zoom">${I("minus",18)}<input type="range" min="1" max="3" step="0.01" value="${cr.z}" aria-label="Zoom" oninput="cr.z=+this.value;clampCrop();drawCrop()">${I("plus",18)}</div><div class="grid"><button class="secondary" style="margin:0" onclick="closeCrop()">Cancelar</button><button class="primary" onclick="applyCrop()">Salvar</button></div></div>`;
  const c=document.getElementById("cv");let p=null;c.onpointerdown=e=>{p=[e.clientX,e.clientY];c.setPointerCapture(e.pointerId)};c.onpointermove=e=>{if(!p)return;cr.ox+=e.clientX-p[0];cr.oy+=e.clientY-p[1];p=[e.clientX,e.clientY];clampCrop();drawCrop()};c.onpointerup=c.onpointercancel=()=>{p=null};clampCrop();drawCrop()}
 function closeCrop(){document.getElementById("crop")?.remove();cr=null}
-function applyCrop(){const c=document.createElement("canvas");c.width=c.height=256;drawCrop(256,c.getContext("2d"));Object.assign(state.user,{photo:c.toDataURL("image/jpeg",.85),photoSrc:cr.src,photoPos:[cr.ox,cr.oy,cr.z]});closeCrop();persistUser();toast("Foto atualizada");render()}
+function applyCrop(){const c=document.createElement("canvas");c.width=c.height=256;drawCrop(256,c.getContext("2d"));Object.assign(state.user,{photo:c.toDataURL("image/jpeg",.85),photoSrc:cr.src,photoPos:[cr.ox,cr.oy,cr.z],photoPending:true});closeCrop();persistUser();syncAvatar();toast("Foto atualizada");render()}
 function persistUser(){const e=state.user.email;store("proUsers",[...load("proUsers",[]).filter(u=>u.email!==e),state.user]);void 0}
-function savePhoto(p){if(!p)state.user.photoSrc=state.user.photoPos=null;state.user.photo=p;persistUser();toast(p?"Foto atualizada":"Foto removida");render()}
+function savePhoto(p){if(!p)state.user.photoSrc=state.user.photoPos=null;state.user.photo=p;state.user.photoPending=true;persistUser();syncAvatar();toast(p?"Foto atualizada":"Foto removida");render()}
 function setPhoto(inp){const f=inp.files[0];inp.value="";if(!f)return;if(!f.type.startsWith("image/"))return toast("Selecione um arquivo de imagem");const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,800/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);openCrop(c.toDataURL("image/jpeg",.85))};im.onerror=()=>toast("Não foi possível ler a imagem");im.src=r.result};r.readAsDataURL(f)}
 
 /* ===== Fotos do serviço (enviadas pelo cliente -> aparecem no Dashboard > Fotos) =====
@@ -531,7 +533,35 @@ function savePhotos(l){try{localStorage.setItem("proPhotos",JSON.stringify(l));r
    A foto continua salva no aparelho (cópia local) e é enviada em segundo plano.
    p.synced=true só depois que o servidor confirmou. */
 const PH_BUCKET="fotos-servico";let _sp=null;
-function syncPhotos(){_sp=(_sp||Promise.resolve()).then(runSync,runSync);return _sp}
+/* ===== Foto de perfil na conta (Supabase) =====
+   A imagem vai para o bucket de fotos e o endereço fica em user_metadata.photo_url,
+   assim aparece em qualquer aparelho logado na mesma conta. */
+let _av=false,_avT=0;
+async function pushAvatar(){const c=sbc(),u=state.user;if(!c||!u||!u.uid)return false;
+ try{const mine=u.photo;let url=null;
+  if(mine){url=mine;
+   if(!/^https?:/.test(mine)){const blob=await (await fetch(mine)).blob(),path="perfil-"+u.uid+"-"+Date.now().toString(36)+".jpg";
+    const r=await c.storage.from(PH_BUCKET).upload(path,blob,{contentType:"image/jpeg",upsert:false});if(r.error)throw r.error;
+    url=c.storage.from(PH_BUCKET).getPublicUrl(path).data.publicUrl}}
+  const r2=await c.auth.updateUser({data:{photo_url:url}});if(r2.error)throw r2.error;
+  if(u.photo===mine){u.photoUrl=url;u.photoPending=false}
+  persistUser();return true}
+ catch(e){console.warn("Envio da foto de perfil falhou",e);return false}}
+async function syncAvatar(){if(_av)return;const c=sbc();let u=state.user;if(!c||!u||!u.uid||!navigator.onLine)return;_av=true;
+ try{if(!await sess())return;
+  if(u.photoPending)await pushAvatar();
+  if(Date.now()-_avT<120000)return;
+  const g=await c.auth.getUser();if(g.error||!g.data||!g.data.user)return;_avT=Date.now();
+  const cu=state.user;if(!cu||cu.uid!==u.uid||cu.photoPending)return;
+  const url=(g.data.user.user_metadata||{}).photo_url||null;let ch=false;
+  if(url){if(cu.photoUrl!==url){cu.photo=url;cu.photoUrl=url;cu.photoSrc=cu.photoPos=null;ch=true}}
+  else if(cu.photoUrl){cu.photo=null;cu.photoUrl=null;cu.photoSrc=cu.photoPos=null;ch=true}
+  else if(cu.photo&&!/^https?:/.test(cu.photo)){cu.photoPending=true;persistUser();await pushAvatar()}
+  if(ch){persistUser();if(["home","profile"].includes(state.page)&&!document.getElementById("crop"))render()}}
+ catch(e){console.warn("Foto de perfil",e)}
+ finally{_av=false}}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){_avT=0;syncAvatar()}});
+function syncPhotos(){syncAvatar();_sp=(_sp||Promise.resolve()).then(runSync,runSync);return _sp}
 async function runSync(){const c=sbc();if(!c||!navigator.onLine)return false;
   const ss=await sess();if(!ss)return false;const me=[(ss.user.email||"").toLowerCase(),((state.user||{}).email||"").toLowerCase()];const pend=photos().filter(p=>!p.synced&&p.src&&(!p.email||me.includes(String(p.email).toLowerCase())));if(!pend.length)return true;
   const done=[];let allOk=true;
