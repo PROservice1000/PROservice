@@ -225,14 +225,15 @@ async function importar(){
   if(!n)return false;put('servillyData',JSON.stringify(d));put('proSbImp',JSON.stringify(imp));window.__novasSol=n;
   var x=dirty();['servillyData','proSbImp'].forEach(function(k){if(x.indexOf(k)<0)x.push(k)});setDirty(x);return true}
  catch(e){return false}}
-async function pull(){
+async function pull(first){
  var r=await sb.from('app_dados').select('chave,valor');if(r.error)throw r.error;
  var rem={},ch=false,d=dirty();r.data.forEach(function(x){rem[x.chave]=x.valor});
+ if(first){d=d.filter(function(k){return rem[k]==null});setDirty(d)}
  SYNC.forEach(function(k){if(d.indexOf(k)>=0)return;var l=ls(k);
   if(rem[k]!=null){if(rem[k]!==l){put(k,rem[k]);ch=true}}
   else if(l!=null){var x=dirty();if(x.indexOf(k)<0)x.push(k);setDirty(x)}});
  if(await importar())ch=true;
- await flush();lastPull=Date.now();return ch}
+ await flush();lastPull=Date.now();put('proLastSync',String(lastPull));return ch}
 function aok(){try{return sessionStorage.getItem('proAuthOk')==='1'}catch(e){return false}}
 function show(id,on){var e=G(id);if(e)e.style.display=on?'':'none'}
 function msg(t,id){var e=G(id||'pro-lg-err');e.style.color='';e.textContent=t||''}
@@ -247,7 +248,7 @@ async function enter(){
   if(a.error){if(!navigator.onLine){start();status('off');return}
    await pend('Não foi possível verificar a permissão de acesso. O administrador precisa executar o SQL atualizado no Supabase (tabela admins).');return}
   if(!a.data||!a.data.length){await pend();return}
-  await pull().then(function(ch){if(ch)location.reload();else start()})}
+  await pull(!ls('proLastSync')).then(function(ch){if(ch)location.reload();else start()})}
  catch(e){start();status('off')}}
 window.proLogin=async function(){
  var em=G('pro-lg-em').value.trim(),pw=G('pro-lg-pw').value,b=G('pro-lg-btn');msg('');
@@ -305,7 +306,7 @@ window.proSair=async function(){
  var ok=await flush();
  if(!ok&&dirty().length&&!confirm('Há alterações ainda não sincronizadas. Sair mesmo assim? Elas serão perdidas.'))return;
  try{await sb.auth.signOut()}catch(e){}
- SYNC.concat(['proSyncDirty']).forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});try{sessionStorage.removeItem('proAuthOk')}catch(e){}location.reload()};
+ SYNC.concat(['proSyncDirty','proLastSync']).forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});try{sessionStorage.removeItem('proAuthOk')}catch(e){}location.reload()};
 async function init(){
  var li=document.querySelector('.brand img'),lg=G('pro-logo');if(li&&lg)lg.src=li.src;
  if(typeof supabase==='undefined'){
