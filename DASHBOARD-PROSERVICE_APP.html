@@ -247,7 +247,7 @@ async function enter(){
   var a=await sb.from('admins').select('user_id').limit(1);
   if(a.error){if(!navigator.onLine){start();status('off');return}
    await pend('Não foi possível verificar a permissão de acesso. O administrador precisa executar o SQL atualizado no Supabase (tabela admins).');return}
-  if(!a.data||!a.data.length){await pend();return}
+  if(!a.data||!a.data.length){try{await sb.auth.signOut()}catch(e){}try{sessionStorage.removeItem('proAuthOk')}catch(e){}show('pro-chk',false);show('pro-welcome',false);show('pro-cad',false);show('pro-pend',false);show('pro-form',true);msg('E-mail ou senha incorretos.');return}
   await pull(!ls('proLastSync')).then(function(ch){if(ch)location.reload();else start()})}
  catch(e){start();status('off')}}
 window.proLogin=async function(){
