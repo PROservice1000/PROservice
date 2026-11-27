@@ -294,6 +294,7 @@ async function doLogin(e){e.preventDefault();
   if(r.error){
    if(isNet(r.error))return bad("Sem conexão. Tente novamente.");
    if(rateLim(r.error))return bad("Muitas tentativas. Aguarde alguns minutos.");
+   if(/banned/i.test(t))return bad("Acesso indisponível. Entre em contato com a PRO Service.");
    if(/email_not_confirmed|not confirmed/i.test(t))return unverified();
    if(/invalid_credentials|invalid login/i.test(t)){
     if(legacyLocal(email,pw))return bad("Sua conta antiga foi criada só neste aparelho. Toque em Criar conta e cadastre-se novamente com o mesmo e-mail.");
@@ -308,7 +309,9 @@ function hydrate(u){const md=u.user_metadata||{},users=load("proUsers",[]),em=(u
   local=users.find(x=>(x.email||"").toLowerCase()===em||x.uid===u.id)||{},
   claim=users.length===1&&(users[0].email||"").toLowerCase()===em;
  const rec={...local,name:local.name||md.name||"Cliente",phone:local.phone||md.phone||"",email:u.email,uid:u.id};delete rec.ph;delete rec.pv;
- store("proUsers",[...users.filter(x=>(x.email||"").toLowerCase()!==em&&x.uid!==u.id),rec]);state.user=rec;loadAppts(u.id,claim)}
+ store("proUsers",[...users.filter(x=>(x.email||"").toLowerCase()!==em&&x.uid!==u.id),rec]);state.user=rec;loadAppts(u.id,claim);proCheca()}
+/* PRO: confirma com o servidor se o cliente continua liberado */
+async function proCheca(){const c=sbc();if(!c||!navigator.onLine)return;try{const r=await c.rpc("meu_status");if(!r.error&&r.data==="bloqueado"){try{await c.auth.signOut({scope:"local"})}catch(x){}state.user=null;state.notice="Acesso indisponível. Entre em contato com a PRO Service.";go("login")}}catch(x){}}
 function startSession(u){hydrate(u);state.tab="inicio";go("home");flushOutbox();pullMine();pullStatus();syncPhotos()}
 const apKey=()=>"proAppts:"+((state.user&&state.user.uid)||"anon");
 function saveAppts(){if(state.user&&state.user.uid)store(apKey(),state.appointments)}
